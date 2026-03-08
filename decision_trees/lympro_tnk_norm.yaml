@@ -1,0 +1,1151 @@
+id: "lympro_tnk_panel_v5_standardized"
+schema_version: "2.0"
+
+purpose: >
+  Deterministic panel rule pack for the combined Lymphoproliferative / T NK branch.
+  One region is available (lymphocytes). Allowed populations within the region are
+  B cells, T cells, and T-LGL. Multiple instances of each population are allowed.
+
+notes:
+  - This pack conforms to the main-tree preferred output contract.
+  - Shared marker-state semantics and numeric precision are imported from the main tree.
+  - Dynamic marker inclusion is explicit both at the panel level and the population level.
+  - Inactive add-on markers are unavailable, not merely hidden.
+  - No population or panel main line appends the terminal "See comment".
+  - A benign panel-level fallback main line is emitted whenever no definite abnormal population is detected.
+
+shared_refs:
+  main_tree_pack_ref: "flow_cytometry_main_tree_v2"
+  marker_state_enum_ref: "flow_cytometry_main_tree_v2.enums.marker_state"
+  expressed_states_ref: "flow_cytometry_main_tree_v2.constants.expressed_states"
+  marker_state_suffix_ref: "flow_cytometry_main_tree_v2.constants.marker_state_suffix"
+  percent_precision_decimals_ref: "flow_cytometry_main_tree_v2.constants.percent_precision_decimals"
+  ratio_precision_decimals_ref: "flow_cytometry_main_tree_v2.constants.ratio_precision_decimals"
+  mainline_terminal_text_ref: "flow_cytometry_main_tree_v2.constants.mainline_terminal_text"
+
+output_contract:
+  produces:
+    - antibody_panel_markers
+    - comment_lines
+    - main_line_items
+
+ids:
+  panels:
+    PANEL_LYMPHOPROLIF_TLGL: "Lymphoproliferative / T NK"
+
+  regions:
+    REGION_LYMPHOCYTES: "Lymphocytes"
+
+  populations:
+    POP_B_CELLS: "B cells"
+    POP_T_CELLS: "T cells"
+    POP_TLGL: "T-LGL"
+
+enums:
+  fsc_size:
+    - FSC_SMALL_TO_INTERMEDIATE
+    - FSC_INTERMEDIATE_TO_LARGE
+    - FSC_NA
+
+  t_normality:
+    - T_NORMAL
+    - T_ABNORMAL
+
+  performed_status:
+    - PERFORMED_NO
+    - PERFORMED_YES
+
+constants:
+  marker_ids_basic:
+    - M_LAMBDA
+    - M_KAPPA
+    - M_CD5
+    - M_CD10
+    - M_CD2
+    - M_CD19
+    - M_CD20
+    - M_CD45
+    - M_CD8
+    - M_CD4
+    - M_CD25
+    - M_CD3
+    - M_CD7
+    - M_CD23
+    - M_CD38
+    - M_CD11C
+    - M_FMC7
+
+  marker_ids_basic_plus_hairy:
+    - M_LAMBDA
+    - M_KAPPA
+    - M_CD5
+    - M_CD10
+    - M_CD2
+    - M_CD19
+    - M_CD20
+    - M_CD45
+    - M_CD8
+    - M_CD4
+    - M_CD25
+    - M_CD3
+    - M_CD7
+    - M_CD23
+    - M_CD38
+    - M_CD11C
+    - M_FMC7
+    - M_CD103
+    - M_CD22
+
+  marker_ids_basic_plus_tnk:
+    - M_LAMBDA
+    - M_KAPPA
+    - M_CD5
+    - M_CD10
+    - M_CD2
+    - M_CD19
+    - M_CD20
+    - M_CD45
+    - M_CD8
+    - M_CD4
+    - M_CD25
+    - M_CD3
+    - M_CD7
+    - M_CD23
+    - M_CD38
+    - M_CD11C
+    - M_FMC7
+    - M_CD16
+    - M_CD26
+    - M_CD56
+    - M_CD57
+    - M_TCR_AB
+    - M_TCR_GD
+
+  marker_ids_basic_plus_hairy_plus_tnk:
+    - M_LAMBDA
+    - M_KAPPA
+    - M_CD5
+    - M_CD10
+    - M_CD2
+    - M_CD19
+    - M_CD20
+    - M_CD45
+    - M_CD8
+    - M_CD4
+    - M_CD25
+    - M_CD3
+    - M_CD7
+    - M_CD23
+    - M_CD38
+    - M_CD11C
+    - M_FMC7
+    - M_CD103
+    - M_CD22
+    - M_CD16
+    - M_CD26
+    - M_CD56
+    - M_CD57
+    - M_TCR_AB
+    - M_TCR_GD
+
+  marker_ids_b_basic:
+    - M_CD19
+    - M_CD20
+    - M_FMC7
+    - M_CD23
+    - M_CD11C
+    - M_CD38
+    - M_CD5
+    - M_CD10
+    - M_CD25
+    - M_KAPPA
+    - M_LAMBDA
+    - M_CD45
+    - M_CD2
+    - M_CD3
+    - M_CD4
+    - M_CD7
+    - M_CD8
+
+  marker_ids_b_plus_hairy:
+    - M_CD19
+    - M_CD20
+    - M_FMC7
+    - M_CD23
+    - M_CD11C
+    - M_CD38
+    - M_CD5
+    - M_CD10
+    - M_CD25
+    - M_KAPPA
+    - M_LAMBDA
+    - M_CD45
+    - M_CD2
+    - M_CD3
+    - M_CD4
+    - M_CD7
+    - M_CD8
+    - M_CD22
+    - M_CD103
+
+  marker_ids_t_basic:
+    - M_CD2
+    - M_CD3
+    - M_CD5
+    - M_CD7
+    - M_CD4
+    - M_CD8
+    - M_CD25
+    - M_CD45
+
+  marker_ids_t_plus_tnk:
+    - M_CD2
+    - M_CD3
+    - M_CD5
+    - M_CD7
+    - M_CD26
+    - M_CD4
+    - M_CD8
+    - M_CD25
+    - M_CD45
+    - M_CD57
+    - M_CD16
+    - M_CD56
+    - M_TCR_AB
+    - M_TCR_GD
+
+  marker_ids_tlgl_basic:
+    - M_CD2
+    - M_CD3
+    - M_CD5
+    - M_CD7
+    - M_CD4
+    - M_CD8
+    - M_CD25
+    - M_CD45
+
+  marker_ids_tlgl_plus_tnk:
+    - M_CD2
+    - M_CD3
+    - M_CD5
+    - M_CD7
+    - M_CD26
+    - M_CD4
+    - M_CD8
+    - M_CD25
+    - M_CD45
+    - M_CD57
+    - M_CD16
+    - M_CD56
+    - M_TCR_AB
+    - M_TCR_GD
+
+  marker_display_order_B:
+    - M_CD19
+    - M_CD20
+    - M_FMC7
+    - M_CD23
+    - M_CD11C
+    - M_CD38
+    - M_CD5
+    - M_CD10
+    - M_CD25
+    - M_KAPPA
+    - M_LAMBDA
+    - M_CD45
+    - M_CD2
+    - M_CD3
+    - M_CD4
+    - M_CD7
+    - M_CD8
+    - M_CD22
+    - M_CD103
+
+  marker_display_order_T:
+    - M_CD2
+    - M_CD3
+    - M_CD5
+    - M_CD7
+    - M_CD26
+    - M_CD4
+    - M_CD8
+    - M_CD25
+    - M_CD45
+    - M_CD57
+    - M_CD16
+    - M_CD56
+    - M_TCR_AB
+    - M_TCR_GD
+
+  marker_display_order_TLGL:
+    - M_CD2
+    - M_CD3
+    - M_CD5
+    - M_CD7
+    - M_CD26
+    - M_CD4
+    - M_CD8
+    - M_CD25
+    - M_CD45
+    - M_CD57
+    - M_CD16
+    - M_CD56
+    - M_TCR_AB
+    - M_TCR_GD
+
+marker_catalog:
+  M_CD19:   { display: "CD19" }
+  M_CD20:   { display: "CD20" }
+  M_CD22:   { display: "CD22" }
+  M_FMC7:   { display: "FMC7" }
+  M_CD23:   { display: "CD23" }
+  M_CD11C:  { display: "CD11c" }
+  M_CD38:   { display: "CD38" }
+  M_CD103:  { display: "CD103" }
+  M_CD10:   { display: "CD10" }
+  M_KAPPA:  { display: "kappa light chain", special_name: true }
+  M_LAMBDA: { display: "lambda light chain", special_name: true }
+  M_CD45:   { display: "CD45" }
+  M_CD2:    { display: "CD2" }
+  M_CD3:    { display: "CD3" }
+  M_CD4:    { display: "CD4" }
+  M_CD5:    { display: "CD5" }
+  M_CD7:    { display: "CD7" }
+  M_CD8:    { display: "CD8" }
+  M_CD25:   { display: "CD25" }
+  M_CD26:   { display: "CD26" }
+  M_CD16:   { display: "CD16" }
+  M_CD56:   { display: "CD56" }
+  M_CD57:   { display: "CD57" }
+  M_TCR_AB: { display: "TCR α/β" }
+  M_TCR_GD: { display: "TCR γ/δ" }
+
+dsl:
+  predicates:
+    - all
+    - any
+    - not
+    - default
+    - tag_present
+    - any_tag
+    - field_present
+    - field_equals
+    - marker_state_is
+    - marker_state_in
+    - marker_states_all_equal
+    - marker_states_all_na_except
+    - list_nonempty
+    - population_count_with_tag
+    - population_count_with_tag_any
+    - context_population_equals
+
+  derived_values:
+    - marker_list
+    - percent_pick
+    - enum_string
+    - ratio_text
+    - cd4_cd8_status_from_marker_states
+    - aberrancy_phrase_from_marker_states
+    - population_exists_with_tag
+    - boolean_or
+    - collect_population_outputs
+
+  rendering:
+    marker_with_modifier_format: "{marker_display} ({modifier})"
+
+  evaluation_rules:
+    - Marker-driven rules, derived lists, and validations are evaluated against active markers only.
+    - Inactive markers are unavailable rather than merely hidden.
+
+panel:
+  panel_id: PANEL_LYMPHOPROLIF_TLGL
+  allow_multiple_populations_per_type: true
+
+  inputs:
+    required:
+      - hairy_cell_markers_performed
+      - t_nk_markers_performed
+    optional: []
+
+  antibody_panel_markers_generation:
+    templates:
+      - id: AB_LYMPRO_BASIC_ONLY
+        priority: 100
+        when:
+          all:
+            - field_equals: { field: "hairy_cell_markers_performed", value: PERFORMED_NO }
+            - field_equals: { field: "t_nk_markers_performed", value: PERFORMED_NO }
+        markers_ref: marker_ids_basic
+
+      - id: AB_LYMPRO_BASIC_PLUS_HAIRY
+        priority: 90
+        when:
+          all:
+            - field_equals: { field: "hairy_cell_markers_performed", value: PERFORMED_YES }
+            - field_equals: { field: "t_nk_markers_performed", value: PERFORMED_NO }
+        markers_ref: marker_ids_basic_plus_hairy
+
+      - id: AB_LYMPRO_BASIC_PLUS_TNK
+        priority: 80
+        when:
+          all:
+            - field_equals: { field: "hairy_cell_markers_performed", value: PERFORMED_NO }
+            - field_equals: { field: "t_nk_markers_performed", value: PERFORMED_YES }
+        markers_ref: marker_ids_basic_plus_tnk
+
+      - id: AB_LYMPRO_BASIC_PLUS_HAIRY_PLUS_TNK
+        priority: 70
+        when:
+          all:
+            - field_equals: { field: "hairy_cell_markers_performed", value: PERFORMED_YES }
+            - field_equals: { field: "t_nk_markers_performed", value: PERFORMED_YES }
+        markers_ref: marker_ids_basic_plus_hairy_plus_tnk
+
+  regions:
+    - region_id: REGION_LYMPHOCYTES
+
+      inputs:
+        required: []
+        optional:
+          - region_pct_total
+          - region_features_text
+
+      region_comment_line_generation:
+        templates:
+          - id: CMT_REGION_LYMPHOCYTES_FULL
+            priority: 100
+            when:
+              all:
+                - field_present: "region_pct_total"
+                - field_present: "region_features_text"
+            text: >
+              Immunophenotypic analysis detects approximately {region_pct_total}% lymphocytes
+              characterized by {region_features_text}.
+
+          - id: CMT_REGION_LYMPHOCYTES_PCT_ONLY
+            priority: 90
+            when:
+              all:
+                - field_present: "region_pct_total"
+                - not: { field_present: "region_features_text" }
+            text: >
+              Immunophenotypic analysis detects approximately {region_pct_total}% lymphocytes in this specimen.
+
+          - id: CMT_REGION_LYMPHOCYTES_FEATURES_ONLY
+            priority: 80
+            when:
+              all:
+                - not: { field_present: "region_pct_total" }
+                - field_present: "region_features_text"
+            text: >
+              Immunophenotypic analysis identifies a lymphocyte population characterized by {region_features_text}.
+
+      populations:
+        - population_id: POP_B_CELLS
+          allow_multiple: true
+
+          active_markers_generation:
+            templates:
+              - id: B_MARKERS_BASIC
+                priority: 100
+                when:
+                  field_equals: { field: "hairy_cell_markers_performed", value: PERFORMED_NO }
+                markers_ref: marker_ids_b_basic
+
+              - id: B_MARKERS_PLUS_HAIRY
+                priority: 90
+                when:
+                  field_equals: { field: "hairy_cell_markers_performed", value: PERFORMED_YES }
+                markers_ref: marker_ids_b_plus_hairy
+
+          inputs:
+            required:
+              - pct_gated_events
+              - marker_states
+            optional:
+              - pct_all_viable
+              - pct_region
+              - fsc_size
+              - kappa_percent
+              - lambda_percent
+
+          tags:
+            static: [TAG_B_POPULATION]
+            auto_from_markers:
+              expressed_tag_pattern: "TAG_B_{marker}_EXPRESSED"
+              negative_tag_pattern: "TAG_B_{marker}_NEGATIVE"
+              modifier_tag_patterns:
+                STATE_DIM: "TAG_B_{marker}_DIM"
+                STATE_BRIGHT: "TAG_B_{marker}_BRIGHT"
+                STATE_SUBSET: "TAG_B_{marker}_SUBSET"
+                STATE_VARIABLE: "TAG_B_{marker}_VARIABLE"
+
+          derived:
+            - id: positive_markers
+              type: marker_list
+              order_const: marker_display_order_B
+              include_states_ref: shared_refs.expressed_states_ref
+              state_suffix_ref: shared_refs.marker_state_suffix_ref
+
+            - id: negative_markers
+              type: marker_list
+              order_const: marker_display_order_B
+              include_states: [STATE_NEGATIVE]
+
+            - id: pct_main
+              type: percent_pick
+              preference_fields: ["pct_gated_events", "pct_all_viable", "pct_region"]
+              precision_decimals_ref: shared_refs.percent_precision_decimals_ref
+
+            - id: pct_comment
+              type: percent_pick
+              preference_fields: ["pct_region", "pct_all_viable", "pct_gated_events"]
+              precision_decimals_ref: shared_refs.percent_precision_decimals_ref
+
+            - id: restricted_label
+              type: enum_string
+              values:
+                TAG_B_KAPPA_RESTRICTED: "kappa"
+                TAG_B_LAMBDA_RESTRICTED: "lambda"
+
+            - id: kappa_lambda_ratio_text
+              type: ratio_text
+              enabled_when:
+                tag_present: TAG_B_POLYCLONAL
+              numerator_field: "kappa_percent"
+              denominator_field: "lambda_percent"
+              precision_decimals_ref: shared_refs.ratio_precision_decimals_ref
+              format:
+                if_kappa_ge_lambda: "{ratio}:1"
+                if_lambda_gt_kappa: "1:{ratio}"
+
+          rules:
+            - id: R_B_KAPPA_RESTRICTED
+              when:
+                all:
+                  - marker_state_in: { marker: M_KAPPA, states_ref: shared_refs.expressed_states_ref }
+                  - marker_state_is: { marker: M_LAMBDA, state: STATE_NEGATIVE }
+              set_tags: [TAG_B_KAPPA_RESTRICTED]
+
+            - id: R_B_LAMBDA_RESTRICTED
+              when:
+                all:
+                  - marker_state_in: { marker: M_LAMBDA, states_ref: shared_refs.expressed_states_ref }
+                  - marker_state_is: { marker: M_KAPPA, state: STATE_NEGATIVE }
+              set_tags: [TAG_B_LAMBDA_RESTRICTED]
+
+            - id: R_B_POLYCLONAL
+              when:
+                all:
+                  - marker_state_in: { marker: M_KAPPA, states_ref: shared_refs.expressed_states_ref }
+                  - marker_state_in: { marker: M_LAMBDA, states_ref: shared_refs.expressed_states_ref }
+              set_tags: [TAG_B_POLYCLONAL]
+
+            - id: R_B_LIGHT_CHAIN_NOT_EVALUABLE
+              when:
+                not:
+                  any_tag: [TAG_B_KAPPA_RESTRICTED, TAG_B_LAMBDA_RESTRICTED, TAG_B_POLYCLONAL]
+              set_tags: [TAG_B_LIGHT_CHAIN_NOT_EVALUABLE]
+
+            - id: R_B_CLL_PATTERN
+              when:
+                all:
+                  - any_tag: [TAG_B_KAPPA_RESTRICTED, TAG_B_LAMBDA_RESTRICTED]
+                  - marker_state_in: { marker: M_CD5, states_ref: shared_refs.expressed_states_ref }
+                  - marker_state_in: { marker: M_CD23, states_ref: shared_refs.expressed_states_ref }
+              set_tags: [TAG_B_CLL_PATTERN]
+
+            - id: R_B_FSC_SMALL_TO_INTERMEDIATE
+              when:
+                all:
+                  - field_present: "fsc_size"
+                  - any_tag: [TAG_B_KAPPA_RESTRICTED, TAG_B_LAMBDA_RESTRICTED]
+                  - field_equals: { field: "fsc_size", value: FSC_SMALL_TO_INTERMEDIATE }
+              set_tags: [TAG_B_FSC_SMALL_TO_INTERMEDIATE]
+
+            - id: R_B_FSC_INTERMEDIATE_TO_LARGE
+              when:
+                all:
+                  - field_present: "fsc_size"
+                  - any_tag: [TAG_B_KAPPA_RESTRICTED, TAG_B_LAMBDA_RESTRICTED]
+                  - field_equals: { field: "fsc_size", value: FSC_INTERMEDIATE_TO_LARGE }
+              set_tags: [TAG_B_FSC_INTERMEDIATE_TO_LARGE]
+
+          normalizations:
+            - id: N_B_IGNORE_FSC_IF_NOT_RESTRICTED
+              when:
+                any_tag: [TAG_B_POLYCLONAL, TAG_B_LIGHT_CHAIN_NOT_EVALUABLE]
+              set_fields:
+                fsc_size: FSC_NA
+
+          comment_line_generation:
+            helper_clauses:
+              neg_clause:
+                when:
+                  list_nonempty: "negative_markers"
+                text: " and negative for {negative_markers}"
+                else_text: ""
+
+              fsc_clause:
+                when:
+                  tag_present: TAG_B_FSC_SMALL_TO_INTERMEDIATE
+                text: " By forward scatter properties, most of the cells are small to intermediate in size."
+                else_when:
+                  tag_present: TAG_B_FSC_INTERMEDIATE_TO_LARGE
+                else_text: " By forward scatter properties, most of the cells are intermediate to large in size."
+                fallback_text: ""
+
+            templates:
+              - id: CMT_B_NONE_DETECTED
+                priority: 200
+                when:
+                  any:
+                    - field_equals: { field: "pct_gated_events", value: 0 }
+                    - field_equals: { field: "pct_all_viable", value: 0 }
+                    - field_equals: { field: "pct_region", value: 0 }
+                text: "No CD19-positive B cells detected."
+
+              - id: CMT_B_INSUFFICIENT_FOR_ANALYSIS
+                priority: 150
+                when:
+                  all:
+                    - marker_states_all_na_except:
+                        except: [M_CD19, M_CD20]
+                        treat_missing_as_na: true
+                    - any:
+                        - marker_state_in: { marker: M_CD19, states_ref: shared_refs.expressed_states_ref }
+                        - marker_state_in: { marker: M_CD20, states_ref: shared_refs.expressed_states_ref }
+                    - not:
+                        any:
+                          - field_equals: { field: "pct_gated_events", value: 0 }
+                          - field_equals: { field: "pct_all_viable", value: 0 }
+                          - field_equals: { field: "pct_region", value: 0 }
+                text: "Less than {pct_comment}% B cells identified, insufficient for further analysis."
+
+              - id: CMT_B_KAPPA_RESTRICTED
+                priority: 100
+                when:
+                  tag_present: TAG_B_KAPPA_RESTRICTED
+                text: >
+                  Approximately {pct_comment}% of the lymphocytes are kappa-restricted B cells
+                  positive for {positive_markers}{neg_clause}.{fsc_clause}
+
+              - id: CMT_B_LAMBDA_RESTRICTED
+                priority: 90
+                when:
+                  tag_present: TAG_B_LAMBDA_RESTRICTED
+                text: >
+                  Approximately {pct_comment}% of the lymphocytes are lambda-restricted B cells
+                  positive for {positive_markers}{neg_clause}.{fsc_clause}
+
+              - id: CMT_B_POLYCLONAL
+                priority: 80
+                when:
+                  tag_present: TAG_B_POLYCLONAL
+                text: >
+                  Polyclonal B cells comprise approximately {pct_comment}% of the lymphocytes and are
+                  positive for {positive_markers}{neg_clause} with a kappa to lambda ratio of about
+                  {kappa_lambda_ratio_text}.
+
+              - id: CMT_B_LIGHT_CHAIN_NOT_EVALUABLE
+                priority: 70
+                when:
+                  tag_present: TAG_B_LIGHT_CHAIN_NOT_EVALUABLE
+                text: >
+                  Approximately {pct_comment}% of the lymphocytes are B cells positive for
+                  {positive_markers}{neg_clause}. Light chain expression is not evaluable for clonality assessment.
+
+          main_line_item_generation:
+            templates:
+              - id: ML_B_CLL
+                priority: 100
+                when:
+                  tag_present: TAG_B_CLL_PATTERN
+                item:
+                  text: >
+                    Immunophenotypic analysis detects a {pct_main}% {restricted_label}-restricted B-cell
+                    population, consistent with chronic lymphocytic leukemia / small lymphocytic lymphoma (CLL/SLL).
+                  finding_priority: 200
+                  finding_class: "B_CELL_CLONAL"
+                  panel_id: PANEL_LYMPHOPROLIF_TLGL
+                  population_id: POP_B_CELLS
+
+              - id: ML_B_GENERIC_NHL
+                priority: 90
+                when:
+                  any_tag: [TAG_B_KAPPA_RESTRICTED, TAG_B_LAMBDA_RESTRICTED]
+                item:
+                  text: >
+                    Immunophenotypic analysis detects a {pct_main}% {restricted_label}-restricted B-cell
+                    population, consistent with non-Hodgkin lymphoma.
+                  finding_priority: 220
+                  finding_class: "B_CELL_CLONAL"
+                  panel_id: PANEL_LYMPHOPROLIF_TLGL
+                  population_id: POP_B_CELLS
+
+          validations:
+            - id: V_B_POLYCLONAL_REQUIRES_LIGHTCHAIN_PCTS
+              severity: ERROR
+              when:
+                all:
+                  - tag_present: TAG_B_POLYCLONAL
+                  - any:
+                      - not: { field_present: "kappa_percent" }
+                      - not: { field_present: "lambda_percent" }
+              message: "Polyclonal branch requires kappa_percent and lambda_percent."
+
+            - id: V_B_NO_REPORTABLE_MARKERS
+              severity: ERROR
+              when:
+                all:
+                  - field_present: "marker_states"
+                  - marker_states_all_equal: { state: STATE_NA }
+              message: "No reportable markers selected for this B-cell population."
+
+        - population_id: POP_T_CELLS
+          allow_multiple: true
+
+          active_markers_generation:
+            templates:
+              - id: T_MARKERS_BASIC
+                priority: 100
+                when:
+                  field_equals: { field: "t_nk_markers_performed", value: PERFORMED_NO }
+                markers_ref: marker_ids_t_basic
+
+              - id: T_MARKERS_PLUS_TNK
+                priority: 90
+                when:
+                  field_equals: { field: "t_nk_markers_performed", value: PERFORMED_YES }
+                markers_ref: marker_ids_t_plus_tnk
+
+          inputs:
+            required:
+              - pct_gated_events
+              - marker_states
+              - t_normality
+            optional:
+              - pct_all_viable
+              - pct_region
+              - cd4_percent
+              - cd8_percent
+
+          tags:
+            static: [TAG_T_POPULATION]
+            from_fields:
+              - when: { field_equals: { field: "t_normality", value: T_NORMAL } }
+                set_tags: [TAG_T_NORMAL]
+              - when: { field_equals: { field: "t_normality", value: T_ABNORMAL } }
+                set_tags: [TAG_T_ABNORMAL]
+            auto_from_markers:
+              expressed_tag_pattern: "TAG_T_{marker}_EXPRESSED"
+              negative_tag_pattern: "TAG_T_{marker}_NEGATIVE"
+              modifier_tag_patterns:
+                STATE_DIM: "TAG_T_{marker}_DIM"
+                STATE_BRIGHT: "TAG_T_{marker}_BRIGHT"
+                STATE_SUBSET: "TAG_T_{marker}_SUBSET"
+                STATE_VARIABLE: "TAG_T_{marker}_VARIABLE"
+
+          derived:
+            - id: positive_markers
+              type: marker_list
+              order_const: marker_display_order_T
+              include_states_ref: shared_refs.expressed_states_ref
+              state_suffix_ref: shared_refs.marker_state_suffix_ref
+
+            - id: negative_markers
+              type: marker_list
+              order_const: marker_display_order_T
+              include_states: [STATE_NEGATIVE]
+
+            - id: pct_main
+              type: percent_pick
+              preference_fields: ["pct_gated_events", "pct_all_viable", "pct_region"]
+              precision_decimals_ref: shared_refs.percent_precision_decimals_ref
+
+            - id: pct_comment
+              type: percent_pick
+              preference_fields: ["pct_region", "pct_all_viable", "pct_gated_events"]
+              precision_decimals_ref: shared_refs.percent_precision_decimals_ref
+
+            - id: cd4_cd8_ratio_text
+              type: ratio_text
+              enabled_when:
+                tag_present: TAG_T_NORMAL
+              numerator_field: "cd4_percent"
+              denominator_field: "cd8_percent"
+              precision_decimals_ref: shared_refs.ratio_precision_decimals_ref
+              format:
+                if_cd4_ge_cd8: "{ratio}:1"
+                if_cd8_gt_cd4: "1:{ratio}"
+
+            - id: cd4_cd8_status_phrase
+              type: cd4_cd8_status_from_marker_states
+              enabled_when:
+                tag_present: TAG_T_ABNORMAL
+              cd4_marker: M_CD4
+              cd8_marker: M_CD8
+              expressed_states_ref: shared_refs.expressed_states_ref
+              negative_state: STATE_NEGATIVE
+              na_state: STATE_NA
+              phrases:
+                cd4_pos_cd8_neg: "CD4-positive"
+                cd4_neg_cd8_pos: "CD8-positive"
+                double_positive: "CD4/CD8 double-positive"
+                double_negative: "CD4/CD8 double-negative"
+                indeterminate: "with CD4/CD8 status as detailed in the comment"
+
+            - id: t_aberrancy_phrase
+              type: aberrancy_phrase_from_marker_states
+              enabled_when:
+                tag_present: TAG_T_ABNORMAL
+              priority_markers: [M_CD7, M_CD5, M_CD2, M_CD3]
+              normal_states: [STATE_POSITIVE, STATE_BRIGHT]
+              ignore_states: [STATE_NA]
+              mapping:
+                STATE_DIM: "showing down-regulation of {marker_display}"
+                STATE_VARIABLE: "showing variable expression of {marker_display}"
+                STATE_SUBSET: "showing partial expression of {marker_display}"
+                STATE_NEGATIVE: "showing loss of {marker_display}"
+              fallback: "showing an aberrant immunophenotype"
+
+          comment_line_generation:
+            helper_clauses:
+              neg_clause:
+                when:
+                  list_nonempty: "negative_markers"
+                text: " while negative for {negative_markers}"
+                else_text: ""
+
+              ratio_clause:
+                when:
+                  all:
+                    - tag_present: TAG_T_NORMAL
+                    - field_present: "cd4_percent"
+                    - field_present: "cd8_percent"
+                text: " with a CD4:CD8 ratio of {cd4_cd8_ratio_text}"
+                else_text: ""
+
+            templates:
+              - id: CMT_T_ABNORMAL
+                priority: 100
+                when:
+                  tag_present: TAG_T_ABNORMAL
+                text: >
+                  About {pct_comment}% of the lymphocytes are abnormal T cells positive for
+                  {positive_markers}{neg_clause}.
+
+              - id: CMT_T_NORMAL
+                priority: 90
+                when:
+                  tag_present: TAG_T_NORMAL
+                text: >
+                  About {pct_comment}% of the remaining lymphocytes are normal T cells positive for
+                  {positive_markers}{neg_clause}{ratio_clause}.
+
+          main_line_item_generation:
+            templates:
+              - id: ML_T_ABNORMAL
+                priority: 100
+                when:
+                  tag_present: TAG_T_ABNORMAL
+                item:
+                  text: >
+                    Immunophenotypic analysis detects an abnormal {cd4_cd8_status_phrase} T-cell population
+                    (~{pct_main}% of all gated events) {t_aberrancy_phrase}.
+                  finding_priority: 230
+                  finding_class: "T_CELL_ABERRANT"
+                  panel_id: PANEL_LYMPHOPROLIF_TLGL
+                  population_id: POP_T_CELLS
+
+          validations:
+            - id: V_T_NORMAL_REQUIRES_CD4_CD8_PCTS
+              severity: WARN
+              when:
+                all:
+                  - tag_present: TAG_T_NORMAL
+                  - any:
+                      - not: { field_present: "cd4_percent" }
+                      - not: { field_present: "cd8_percent" }
+              message: "Normal T-cell populations should include CD4% and CD8% for ratio reporting."
+
+            - id: V_T_NO_REPORTABLE_MARKERS
+              severity: ERROR
+              when:
+                all:
+                  - field_present: "marker_states"
+                  - marker_states_all_equal: { state: STATE_NA }
+              message: "No reportable markers selected for this T-cell population."
+
+        - population_id: POP_TLGL
+          allow_multiple: true
+
+          active_markers_generation:
+            templates:
+              - id: TLGL_MARKERS_BASIC
+                priority: 100
+                when:
+                  field_equals: { field: "t_nk_markers_performed", value: PERFORMED_NO }
+                markers_ref: marker_ids_tlgl_basic
+
+              - id: TLGL_MARKERS_PLUS_TNK
+                priority: 90
+                when:
+                  field_equals: { field: "t_nk_markers_performed", value: PERFORMED_YES }
+                markers_ref: marker_ids_tlgl_plus_tnk
+
+          inputs:
+            required:
+              - pct_gated_events
+              - marker_states
+              - t_normality
+            optional:
+              - pct_all_viable
+              - pct_region
+
+          tags:
+            static: [TAG_TLGL_POPULATION]
+            from_fields:
+              - when: { field_equals: { field: "t_normality", value: T_NORMAL } }
+                set_tags: [TAG_TLGL_NORMAL]
+              - when: { field_equals: { field: "t_normality", value: T_ABNORMAL } }
+                set_tags: [TAG_TLGL_ABNORMAL]
+            auto_from_markers:
+              expressed_tag_pattern: "TAG_TLGL_{marker}_EXPRESSED"
+              negative_tag_pattern: "TAG_TLGL_{marker}_NEGATIVE"
+              modifier_tag_patterns:
+                STATE_DIM: "TAG_TLGL_{marker}_DIM"
+                STATE_BRIGHT: "TAG_TLGL_{marker}_BRIGHT"
+                STATE_SUBSET: "TAG_TLGL_{marker}_SUBSET"
+                STATE_VARIABLE: "TAG_TLGL_{marker}_VARIABLE"
+
+          derived:
+            - id: positive_markers
+              type: marker_list
+              order_const: marker_display_order_TLGL
+              include_states_ref: shared_refs.expressed_states_ref
+              state_suffix_ref: shared_refs.marker_state_suffix_ref
+
+            - id: negative_markers
+              type: marker_list
+              order_const: marker_display_order_TLGL
+              include_states: [STATE_NEGATIVE]
+
+            - id: pct_main
+              type: percent_pick
+              preference_fields: ["pct_gated_events", "pct_all_viable", "pct_region"]
+              precision_decimals_ref: shared_refs.percent_precision_decimals_ref
+
+            - id: pct_comment
+              type: percent_pick
+              preference_fields: ["pct_region", "pct_all_viable", "pct_gated_events"]
+              precision_decimals_ref: shared_refs.percent_precision_decimals_ref
+
+          comment_line_generation:
+            helper_clauses:
+              neg_clause:
+                when:
+                  list_nonempty: "negative_markers"
+                text: " while negative for {negative_markers}"
+                else_text: ""
+
+            templates:
+              - id: CMT_TLGL_ABNORMAL
+                priority: 100
+                when:
+                  tag_present: TAG_TLGL_ABNORMAL
+                text: >
+                  About {pct_comment}% of the lymphocytes are abnormal T-LGLs positive for
+                  {positive_markers}{neg_clause}.
+
+              - id: CMT_TLGL_NORMAL
+                priority: 90
+                when:
+                  tag_present: TAG_TLGL_NORMAL
+                text: >
+                  About {pct_comment}% of the lymphocytes are T-LGLs positive for
+                  {positive_markers}{neg_clause}.
+
+          main_line_item_generation:
+            templates:
+              - id: ML_TLGL_ABNORMAL
+                priority: 100
+                when:
+                  tag_present: TAG_TLGL_ABNORMAL
+                item:
+                  text: >
+                    Immunophenotypic analysis reveals an abnormal population of T-large granular lymphocytes
+                    (~{pct_main}% of all gated events).
+                  finding_priority: 240
+                  finding_class: "TLGL_ABERRANT"
+                  panel_id: PANEL_LYMPHOPROLIF_TLGL
+                  population_id: POP_TLGL
+
+          validations:
+            - id: V_TLGL_NO_REPORTABLE_MARKERS
+              severity: ERROR
+              when:
+                all:
+                  - field_present: "marker_states"
+                  - marker_states_all_equal: { state: STATE_NA }
+              message: "No reportable markers selected for this T-LGL population."
+
+  comment_lines_generation:
+    output_format: "line_list"
+    order:
+      - region_comment
+      - populations_of_type: POP_B_CELLS
+      - populations_of_type: POP_T_CELLS
+      - populations_of_type: POP_TLGL
+
+  main_line_items_generation:
+    derived:
+      - id: has_restricted_B_kappa
+        type: population_exists_with_tag
+        args: { tag: TAG_B_KAPPA_RESTRICTED }
+
+      - id: has_restricted_B_lambda
+        type: population_exists_with_tag
+        args: { tag: TAG_B_LAMBDA_RESTRICTED }
+
+      - id: has_any_restricted_B
+        type: boolean_or
+        args: { values: [has_restricted_B_kappa, has_restricted_B_lambda] }
+
+      - id: has_abnormal_T
+        type: population_exists_with_tag
+        args: { tag: TAG_T_ABNORMAL }
+
+      - id: has_abnormal_TLGL
+        type: population_exists_with_tag
+        args: { tag: TAG_TLGL_ABNORMAL }
+
+      - id: has_any_definite_abnormal_population
+        type: boolean_or
+        args: { values: [has_any_restricted_B, has_abnormal_T, has_abnormal_TLGL] }
+
+      - id: b_main_line_items
+        type: collect_population_outputs
+        args:
+          population_id: POP_B_CELLS
+          output_kind: "main_line_item"
+
+      - id: t_main_line_items
+        type: collect_population_outputs
+        args:
+          population_id: POP_T_CELLS
+          output_kind: "main_line_item"
+
+      - id: tlgl_main_line_items
+        type: collect_population_outputs
+        args:
+          population_id: POP_TLGL
+          output_kind: "main_line_item"
+
+    templates:
+      - id: ML_PANEL_FINDINGS_COMPOSITE
+        priority: 200
+        when:
+          field_equals: { field: "has_any_definite_abnormal_population", value: true }
+        output_items_from:
+          - b_main_line_items
+          - t_main_line_items
+          - tlgl_main_line_items
+
+      - id: ML_PANEL_BENIGN_FALLBACK
+        priority: 100
+        when:
+          field_equals: { field: "has_any_definite_abnormal_population", value: false }
+        output_items:
+          - text: "No monoclonal B-cell population or aberrant T-cell population identified."
+            finding_priority: 750
+            finding_class: "PANEL_NEGATIVE"
+            panel_id: PANEL_LYMPHOPROLIF_TLGL
+
+  ui_prompts:
+    - step: 1
+      ask:
+        - hairy_cell_markers_performed
+        - t_nk_markers_performed
+
+    - step: 2
+      ask:
+        - region_pct_total
+        - region_features_text
+
+    - step: 3
+      action: "select_population_type"
+      choices:
+        - POP_B_CELLS
+        - POP_T_CELLS
+        - POP_TLGL
+      allow_repeat: true
+
+    - step: 4
+      when:
+        context_population_equals: POP_B_CELLS
+      ask:
+        - pct_gated_events
+        - pct_all_viable
+        - pct_region
+        - fsc_size
+
+    - step: 4
+      when:
+        context_population_equals: POP_T_CELLS
+      ask:
+        - pct_gated_events
+        - pct_all_viable
+        - pct_region
+        - t_normality
+
+    - step: 4
+      when:
+        context_population_equals: POP_TLGL
+      ask:
+        - pct_gated_events
+        - pct_all_viable
+        - pct_region
+        - t_normality
+
+    - step: 5
+      ask_marker_states_from_active_population_markers: true
+
+    - step: 6
+      when:
+        all:
+          - context_population_equals: POP_B_CELLS
+          - tag_present: TAG_B_POLYCLONAL
+      ask:
+        - kappa_percent
+        - lambda_percent
+
+    - step: 6
+      when:
+        all:
+          - context_population_equals: POP_T_CELLS
+          - field_equals: { field: "t_normality", value: T_NORMAL }
+      ask:
+        - cd4_percent
+        - cd8_percent
+
+tags_reference:
+  B:
+    - TAG_B_POPULATION
+    - TAG_B_KAPPA_RESTRICTED
+    - TAG_B_LAMBDA_RESTRICTED
+    - TAG_B_POLYCLONAL
+    - TAG_B_LIGHT_CHAIN_NOT_EVALUABLE
+    - TAG_B_CLL_PATTERN
+    - TAG_B_FSC_SMALL_TO_INTERMEDIATE
+    - TAG_B_FSC_INTERMEDIATE_TO_LARGE
+
+  T:
+    - TAG_T_POPULATION
+    - TAG_T_NORMAL
+    - TAG_T_ABNORMAL
+
+  TLGL:
+    - TAG_TLGL_POPULATION
+    - TAG_TLGL_NORMAL
+    - TAG_TLGL_ABNORMAL
