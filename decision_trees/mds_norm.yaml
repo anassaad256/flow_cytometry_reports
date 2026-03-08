@@ -1,0 +1,372 @@
+id: "mds_panel_v3_standardized"
+schema_version: "2.0"
+
+purpose: >
+  Deterministic panel rule pack for the MDS branch.
+  This is a simplified acute-leukemia-style branch with blasts and monocytes,
+  but only myeloblast logic is represented in the blast region.
+
+notes:
+  - This pack conforms to the main-tree preferred output contract.
+  - Shared marker-state semantics and numeric precision are imported from the main tree.
+  - Marker display is handled through active marker generation for architectural consistency.
+  - There is no cyto-tube gate in this panel.
+  - Only myeloblast logic is present in the blast region.
+  - No placeholder panel fallback main line is emitted.
+
+shared_refs:
+  main_tree_pack_ref: "flow_cytometry_main_tree_v2"
+  marker_state_enum_ref: "flow_cytometry_main_tree_v2.enums.marker_state"
+  expressed_states_ref: "flow_cytometry_main_tree_v2.constants.expressed_states"
+  marker_state_suffix_ref: "flow_cytometry_main_tree_v2.constants.marker_state_suffix"
+  percent_precision_decimals_ref: "flow_cytometry_main_tree_v2.constants.percent_precision_decimals"
+  ratio_precision_decimals_ref: "flow_cytometry_main_tree_v2.constants.ratio_precision_decimals"
+  mainline_terminal_text_ref: "flow_cytometry_main_tree_v2.constants.mainline_terminal_text"
+
+output_contract:
+  produces:
+    - antibody_panel_markers
+    - comment_lines
+    - main_line_items
+
+ids:
+  panels:
+    PANEL_MDS: "MDS"
+
+  regions:
+    REGION_BLASTS: "Blasts"
+    REGION_MONOCYTES: "Monocytes"
+
+  populations:
+    POP_BLASTS: "Blasts"
+    POP_MONOCYTES: "Monocytes"
+
+constants:
+  marker_display_order_MDS:
+    - M_CD14
+    - M_CD13
+    - M_CD33
+    - M_CD117
+    - M_CD34
+    - M_CD19
+    - M_CD7
+    - M_CD45
+    - M_CD64
+
+  marker_ids_mds:
+    - M_CD14
+    - M_CD13
+    - M_CD33
+    - M_CD117
+    - M_CD34
+    - M_CD19
+    - M_CD7
+    - M_CD45
+    - M_CD64
+
+marker_catalog:
+  M_CD14:  { display: "CD14" }
+  M_CD13:  { display: "CD13" }
+  M_CD33:  { display: "CD33" }
+  M_CD117: { display: "CD117" }
+  M_CD34:  { display: "CD34" }
+  M_CD19:  { display: "CD19" }
+  M_CD7:   { display: "CD7" }
+  M_CD45:  { display: "CD45" }
+  M_CD64:  { display: "CD64" }
+
+dsl:
+  predicates:
+    - all
+    - any
+    - not
+    - default
+    - field_present
+    - field_gte
+    - field_lt
+    - list_nonempty
+    - marker_states_all_equal
+    - context_region_equals
+
+  derived_values:
+    - marker_list
+    - percent_pick
+    - collect_population_outputs
+
+panel:
+  panel_id: PANEL_MDS
+  allow_multiple_populations_per_type: true
+
+  inputs:
+    required: []
+    optional: []
+
+  antibody_panel_markers_generation:
+    templates:
+      - id: AB_MDS
+        priority: 100
+        when: { default: true }
+        markers_ref: marker_ids_mds
+
+  regions:
+    - region_id: REGION_BLASTS
+
+      inputs:
+        required: []
+        optional: []
+
+      region_comment_line_generation:
+        templates: []
+
+      populations:
+        - population_id: POP_BLASTS
+          allow_multiple: true
+
+          active_markers_generation:
+            templates:
+              - id: BLAST_MARKERS_MDS
+                priority: 100
+                when: { default: true }
+                markers_ref: marker_ids_mds
+
+          inputs:
+            required:
+              - pct_gated_events
+              - marker_states
+            optional: []
+
+          derived:
+            - id: positive_markers
+              type: marker_list
+              order_const: marker_display_order_MDS
+              include_states_ref: shared_refs.expressed_states_ref
+              state_suffix_ref: shared_refs.marker_state_suffix_ref
+
+            - id: negative_markers
+              type: marker_list
+              order_const: marker_display_order_MDS
+              include_states: [STATE_NEGATIVE]
+
+            - id: pct_main
+              type: percent_pick
+              preference_fields: ["pct_gated_events"]
+              precision_decimals_ref: shared_refs.percent_precision_decimals_ref
+
+            - id: pct_comment
+              type: percent_pick
+              preference_fields: ["pct_gated_events"]
+              precision_decimals_ref: shared_refs.percent_precision_decimals_ref
+
+          comment_line_generation:
+            templates:
+              - id: CMT_BLAST_MYELOBLASTS_POS_NEG
+                priority: 300
+                when:
+                  all:
+                    - list_nonempty: "positive_markers"
+                    - list_nonempty: "negative_markers"
+                text: >
+                  Immunophenotypic analysis detects {pct_comment}% myeloblasts in area characterized by
+                  dim/moderate CD45 expression and low side scatter pattern, in the specimen after processing.
+                  These blasts are positive for {positive_markers} while negative for {negative_markers}.
+
+              - id: CMT_BLAST_MYELOBLASTS_POS_ONLY
+                priority: 290
+                when:
+                  all:
+                    - list_nonempty: "positive_markers"
+                    - not: { list_nonempty: "negative_markers" }
+                text: >
+                  Immunophenotypic analysis detects {pct_comment}% myeloblasts in area characterized by
+                  dim/moderate CD45 expression and low side scatter pattern, in the specimen after processing.
+                  These blasts are positive for {positive_markers}.
+
+              - id: CMT_BLAST_MYELOBLASTS_NEG_ONLY
+                priority: 280
+                when:
+                  all:
+                    - not: { list_nonempty: "positive_markers" }
+                    - list_nonempty: "negative_markers"
+                text: >
+                  Immunophenotypic analysis detects {pct_comment}% myeloblasts in area characterized by
+                  dim/moderate CD45 expression and low side scatter pattern, in the specimen after processing.
+                  These blasts are negative for {negative_markers}.
+
+          main_line_item_generation:
+            templates:
+              - id: ML_BLAST_AML
+                priority: 100
+                when:
+                  field_gte: { field: "pct_gated_events", value: 20 }
+                item:
+                  text: "Acute myeloid leukemia ({pct_main}% myeloblasts)"
+                  finding_priority: 100
+                  finding_class: "ACUTE_LEUKEMIA"
+                  panel_id: PANEL_MDS
+                  population_id: POP_BLASTS
+
+              - id: ML_BLAST_MYELOBLASTS_UNDER_20
+                priority: 90
+                when:
+                  field_lt: { field: "pct_gated_events", value: 20 }
+                item:
+                  text: "Immunophenotypic analysis detects around {pct_main}% myeloblasts."
+                  finding_priority: 350
+                  finding_class: "BLAST_FINDING"
+                  panel_id: PANEL_MDS
+                  population_id: POP_BLASTS
+
+          validations:
+            - id: V_BLAST_NO_REPORTABLE_MARKERS
+              severity: ERROR
+              when:
+                all:
+                  - field_present: "marker_states"
+                  - marker_states_all_equal: { state: STATE_NA }
+              message: "No reportable markers selected for this blast population."
+
+    - region_id: REGION_MONOCYTES
+
+      inputs:
+        required: []
+        optional: []
+
+      region_comment_line_generation:
+        templates: []
+
+      populations:
+        - population_id: POP_MONOCYTES
+          allow_multiple: true
+
+          active_markers_generation:
+            templates:
+              - id: MONOCYTE_MARKERS_MDS
+                priority: 100
+                when: { default: true }
+                markers_ref: marker_ids_mds
+
+          inputs:
+            required:
+              - pct_gated_events
+              - marker_states
+            optional: []
+
+          derived:
+            - id: positive_markers
+              type: marker_list
+              order_const: marker_display_order_MDS
+              include_states_ref: shared_refs.expressed_states_ref
+              state_suffix_ref: shared_refs.marker_state_suffix_ref
+
+            - id: negative_markers
+              type: marker_list
+              order_const: marker_display_order_MDS
+              include_states: [STATE_NEGATIVE]
+
+            - id: pct_comment
+              type: percent_pick
+              preference_fields: ["pct_gated_events"]
+              precision_decimals_ref: shared_refs.percent_precision_decimals_ref
+
+          comment_line_generation:
+            templates:
+              - id: CMT_MONOCYTES_POS_NEG
+                priority: 100
+                when:
+                  all:
+                    - list_nonempty: "positive_markers"
+                    - list_nonempty: "negative_markers"
+                text: >
+                  Monocytes constitute around {pct_comment}% of all gated cells. They are positive for
+                  {positive_markers} while negative for {negative_markers}.
+
+              - id: CMT_MONOCYTES_POS_ONLY
+                priority: 90
+                when:
+                  all:
+                    - list_nonempty: "positive_markers"
+                    - not: { list_nonempty: "negative_markers" }
+                text: >
+                  Monocytes constitute around {pct_comment}% of all gated cells. They are positive for
+                  {positive_markers}.
+
+              - id: CMT_MONOCYTES_NEG_ONLY
+                priority: 80
+                when:
+                  all:
+                    - not: { list_nonempty: "positive_markers" }
+                    - list_nonempty: "negative_markers"
+                text: >
+                  Monocytes constitute around {pct_comment}% of all gated cells. They are negative for
+                  {negative_markers}.
+
+          main_line_item_generation:
+            templates: []
+
+          validations:
+            - id: V_MONOCYTE_NO_REPORTABLE_MARKERS
+              severity: ERROR
+              when:
+                all:
+                  - field_present: "marker_states"
+                  - marker_states_all_equal: { state: STATE_NA }
+              message: "No reportable markers selected for this monocyte population."
+
+  comment_lines_generation:
+    output_format: "line_list"
+    order:
+      - region_comment
+      - populations_of_type: POP_BLASTS
+      - populations_of_type: POP_MONOCYTES
+
+  main_line_items_generation:
+    derived:
+      - id: blast_main_line_items
+        type: collect_population_outputs
+        args:
+          population_id: POP_BLASTS
+          output_kind: "main_line_item"
+
+    templates:
+      - id: ML_PANEL_MDS
+        priority: 100
+        when:
+          list_nonempty: "blast_main_line_items"
+        output_items_from:
+          - blast_main_line_items
+
+      - id: ML_PANEL_MDS_EMPTY
+        priority: 1
+        when: { default: true }
+        output_items:
+          - text: "No significant immunophenotypic abnormalities identified."
+            finding_priority: 750
+            finding_class: "PANEL_NEGATIVE"
+            panel_id: PANEL_MDS
+
+  ui_prompts:
+    - step: 1
+      action: "select_region"
+      choices:
+        - REGION_BLASTS
+        - REGION_MONOCYTES
+      allow_repeat: true
+
+    - step: 2
+      when:
+        context_region_equals: REGION_BLASTS
+      ask:
+        - pct_gated_events
+
+    - step: 2
+      when:
+        context_region_equals: REGION_MONOCYTES
+      ask:
+        - pct_gated_events
+
+    - step: 3
+      when:
+        any:
+          - context_region_equals: REGION_BLASTS
+          - context_region_equals: REGION_MONOCYTES
+      ask_marker_states_from_active_population_markers: true

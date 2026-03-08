@@ -1,0 +1,437 @@
+id: "flow_cytometry_main_tree_v2"
+schema_version: "2.0"
+
+purpose: >
+  Deterministic case-level orchestration tree for the Flow Cytometry Report Generator.
+  This tree owns the global workflow, shared enums/constants, adequacy gating,
+  panel-pack invocation, and final assembly of the General, Main line, and Comment outputs.
+
+notes:
+  - This is the authoritative case-level tree.
+  - Panel-specific interpretation remains in separate panel rule packs.
+  - Universal marker-state semantics and numeric formatting defaults are defined here globally.
+  - The main tree is the sole owner of the final terminal main-line text.
+  - Active branch packs are expected to emit the preferred line-oriented output contract directly.
+  - Legacy branch-output compatibility normalization has been removed from the live architecture.
+
+# ============================================================
+# GLOBAL ENUMS / CONSTANTS
+# ============================================================
+enums:
+  marker_state:
+    - STATE_POSITIVE
+    - STATE_BRIGHT
+    - STATE_NEGATIVE
+    - STATE_SUBSET
+    - STATE_DIM
+    - STATE_VARIABLE
+    - STATE_NA
+
+  adequacy_status:
+    - ADEQUACY_ADEQUATE
+    - ADEQUACY_INADEQUATE
+
+  inadequate_reason:
+    - INADEQUATE_LOW_CELLULAR_EVENTS
+    - INADEQUATE_VISCOUS_SPECIMEN
+    - INADEQUATE_LOW_VIABILITY
+
+constants:
+  expressed_states:
+    - STATE_POSITIVE
+    - STATE_BRIGHT
+    - STATE_SUBSET
+    - STATE_DIM
+    - STATE_VARIABLE
+
+  marker_state_suffix:
+    STATE_BRIGHT: "bright"
+    STATE_DIM: "dim"
+    STATE_SUBSET: "subset"
+    STATE_VARIABLE: "variable"
+
+  percent_precision_decimals: 1
+  ratio_precision_decimals: 1
+
+  viability_caution_threshold_percent: 50
+  mainline_terminal_text: "See comment"
+  lab_disclaimer_text: "__LAB_DISCLAIMER__"
+
+# ============================================================
+# STABLE IDS
+# ============================================================
+ids:
+  workflow:
+    TREE_MAIN: "Flow cytometry main tree"
+
+  panels:
+    PANEL_LYMPHOPROLIF_TLGL: "Lymphoproliferative / T NK"
+    PANEL_PLASMA_CELL_MYELOMA: "Plasma cell myeloma"
+    PANEL_ACUTE_LEUKEMIA: "Acute leukemia"
+    PANEL_MDS: "MDS"
+
+  outputs:
+    OUTPUT_GENERAL: "General"
+    OUTPUT_MAIN_LINE: "Main line"
+    OUTPUT_COMMENT: "Comment"
+
+# ============================================================
+# DSL / ENGINE REQUIREMENTS
+# ============================================================
+dsl:
+  predicates:
+    - all
+    - any
+    - not
+    - default
+    - field_present
+    - field_equals
+    - field_lt
+    - list_nonempty
+
+  transformers:
+    - invoke_selected_panel_packs
+    - collect_panel_outputs
+    - deduplicate_markers
+    - marker_display_list
+    - join_lines
+    - append_line
+    - sort_lines
+
+  rendering:
+    drop_blank_output_lines: true
+    marker_list_joiner: ", "
+
+  evaluation_rules:
+    - Comparison predicates may use either a literal value or a value_ref bound to a global constant.
+
+# ============================================================
+# PANEL PACK CONTRACT
+# ============================================================
+panel_pack_contract:
+  rationale: >
+    Active panel packs must emit a line-oriented, panel-independent contract.
+    Legacy panel outputs are no longer part of the live architecture.
+
+  preferred_outputs:
+    required:
+      - antibody_panel_markers
+      - comment_lines
+      - main_line_items
+    main_line_item_schema:
+      required:
+        - text
+      optional:
+        - finding_priority
+        - finding_class
+        - panel_id
+        - population_id
+
+# ============================================================
+# MAIN TREE
+# ============================================================
+main_tree:
+  inputs:
+    required:
+      - specimen_type
+      - clinical_data
+      - adequacy_status
+    optional:
+      - inadequate_reason
+      - viability_percent
+      - selected_panels
+
+  panel_registry:
+    - panel_id: PANEL_LYMPHOPROLIF_TLGL
+      pack_ref: "lympro_tnk_panel_v5_standardized"
+
+    - panel_id: PANEL_PLASMA_CELL_MYELOMA
+      pack_ref: "plasma_cell_myeloma_panel_v3_standardized"
+
+    - panel_id: PANEL_ACUTE_LEUKEMIA
+      pack_ref: "acute_leukemia_panel_v3_standardized"
+
+    - panel_id: PANEL_MDS
+      pack_ref: "mds_panel_v3_standardized"
+
+  workflow:
+    inadequate_path:
+      when:
+        field_equals:
+          field: "adequacy_status"
+          value: ADEQUACY_INADEQUATE
+      required_fields:
+        - inadequate_reason
+
+    adequate_path:
+      when:
+        field_equals:
+          field: "adequacy_status"
+          value: ADEQUACY_ADEQUATE
+      required_fields:
+        - viability_percent
+        - selected_panels
+
+  validations:
+    - id: V_INADEQUATE_REASON_REQUIRED
+      severity: ERROR
+      when:
+        all:
+          - field_equals: { field: "adequacy_status", value: ADEQUACY_INADEQUATE }
+          - not: { field_present: "inadequate_reason" }
+      message: "inadequate_reason is required when adequacy_status = ADEQUACY_INADEQUATE."
+
+    - id: V_LOW_VIABILITY_PERCENT_REQUIRED
+      severity: ERROR
+      when:
+        all:
+          - field_equals: { field: "adequacy_status", value: ADEQUACY_INADEQUATE }
+          - field_equals: { field: "inadequate_reason", value: INADEQUATE_LOW_VIABILITY }
+          - not: { field_present: "viability_percent" }
+      message: "viability_percent is required for the inadequate low-viability path."
+
+    - id: V_ADEQUATE_VIABILITY_REQUIRED
+      severity: ERROR
+      when:
+        all:
+          - field_equals: { field: "adequacy_status", value: ADEQUACY_ADEQUATE }
+          - not: { field_present: "viability_percent" }
+      message: "viability_percent is required when adequacy_status = ADEQUACY_ADEQUATE."
+
+    - id: V_ADEQUATE_PANELS_REQUIRED
+      severity: ERROR
+      when:
+        all:
+          - field_equals: { field: "adequacy_status", value: ADEQUACY_ADEQUATE }
+          - not: { list_nonempty: "selected_panels" }
+      message: "At least one panel must be selected when adequacy_status = ADEQUACY_ADEQUATE."
+
+  derived:
+    - id: selected_panel_results
+      type: invoke_selected_panel_packs
+      enabled_when:
+        field_equals: { field: "adequacy_status", value: ADEQUACY_ADEQUATE }
+      args:
+        selected_panels_field: "selected_panels"
+        panel_registry_ref: "panel_registry"
+        contract_ref: "panel_pack_contract"
+
+    - id: antibody_panel_markers_raw
+      type: collect_panel_outputs
+      enabled_when:
+        field_equals: { field: "adequacy_status", value: ADEQUACY_ADEQUATE }
+      args:
+        source: "selected_panel_results"
+        output_kind: "antibody_panel_markers"
+
+    - id: antibody_panel_markers_deduped
+      type: deduplicate_markers
+      enabled_when:
+        field_equals: { field: "adequacy_status", value: ADEQUACY_ADEQUATE }
+      args:
+        markers_from: "antibody_panel_markers_raw"
+
+    - id: antibody_panel_display
+      type: marker_display_list
+      enabled_when:
+        field_equals: { field: "adequacy_status", value: ADEQUACY_ADEQUATE }
+      args:
+        markers_from: "antibody_panel_markers_deduped"
+
+    - id: panel_main_line_items
+      type: collect_panel_outputs
+      enabled_when:
+        field_equals: { field: "adequacy_status", value: ADEQUACY_ADEQUATE }
+      args:
+        source: "selected_panel_results"
+        output_kind: "main_line_items"
+
+    - id: ordered_main_line_texts
+      type: sort_lines
+      enabled_when:
+        field_equals: { field: "adequacy_status", value: ADEQUACY_ADEQUATE }
+      args:
+        values_from: "panel_main_line_items"
+        sort_policy:
+          primary: "finding_priority_ascending_if_present"
+          secondary: "selection_order"
+
+    - id: panel_comment_lines
+      type: collect_panel_outputs
+      enabled_when:
+        field_equals: { field: "adequacy_status", value: ADEQUACY_ADEQUATE }
+      args:
+        source: "selected_panel_results"
+        output_kind: "comment_lines"
+
+    - id: comment_lines_with_viability_caution
+      type: append_line
+      enabled_when:
+        all:
+          - field_equals: { field: "adequacy_status", value: ADEQUACY_ADEQUATE }
+          - field_lt:
+              field: "viability_percent"
+              value_ref: "constants.viability_caution_threshold_percent"
+      args:
+        values_from: "panel_comment_lines"
+        line: "Given the reduced specimen viability ({viability_percent}%), these results need to be interpreted with caution"
+
+  helper_clauses:
+    general_viability_line:
+      when:
+        any:
+          - all:
+              - field_equals: { field: "adequacy_status", value: ADEQUACY_ADEQUATE }
+              - field_present: "viability_percent"
+          - all:
+              - field_equals: { field: "adequacy_status", value: ADEQUACY_INADEQUATE }
+              - field_equals: { field: "inadequate_reason", value: INADEQUATE_LOW_VIABILITY }
+              - field_present: "viability_percent"
+      text: "Viability = {viability_percent}%, by using 7-AAD"
+      else_text: ""
+
+    general_antibody_panel_line:
+      when:
+        all:
+          - field_equals: { field: "adequacy_status", value: ADEQUACY_ADEQUATE }
+          - list_nonempty: "antibody_panel_markers_deduped"
+      text: "Antibody Panel Performed: {antibody_panel_display}"
+      else_text: ""
+
+  general_generation:
+    templates:
+      - id: GENERAL_STANDARD
+        priority: 100
+        when: { default: true }
+        output_lines:
+          - "Clinical Pathology Consultation Report"
+          - "Specimen: {specimen_type}"
+          - "Clinical data: {clinical_data}"
+          - "{general_viability_line}"
+          - "{general_antibody_panel_line}"
+          - "{lab_disclaimer_text}"
+
+  main_line_generation:
+    templates:
+      - id: ML_INADEQUATE_LOW_CELLULAR_EVENTS
+        priority: 300
+        when:
+          all:
+            - field_equals: { field: "adequacy_status", value: ADEQUACY_INADEQUATE }
+            - field_equals: { field: "inadequate_reason", value: INADEQUATE_LOW_CELLULAR_EVENTS }
+        output_lines:
+          - "{specimen_type}, flow cytometry analysis:"
+          - "Flow cytometry was attempted but could not be performed due to extremely low cellular events in the specimen. Examination of the cytospin prepared slide shows no atypical cells"
+
+      - id: ML_INADEQUATE_VISCOUS_SPECIMEN
+        priority: 290
+        when:
+          all:
+            - field_equals: { field: "adequacy_status", value: ADEQUACY_INADEQUATE }
+            - field_equals: { field: "inadequate_reason", value: INADEQUATE_VISCOUS_SPECIMEN }
+        output_lines:
+          - "{specimen_type}:"
+          - "- Unable to perform flow cytometry, see comment"
+
+      - id: ML_INADEQUATE_LOW_VIABILITY
+        priority: 280
+        when:
+          all:
+            - field_equals: { field: "adequacy_status", value: ADEQUACY_INADEQUATE }
+            - field_equals: { field: "inadequate_reason", value: INADEQUATE_LOW_VIABILITY }
+        output_lines:
+          - "{specimen_type}, flow cytometry analysis:"
+          - "- Flow cytometry analysis is attempted. However, meaningful interpretation is hindered by extensive background staining due to low viability ({viability_percent}% viable cells based on 7-AAD exclusion assay). Correlation with tissue specimen is recommended"
+
+      - id: ML_ADEQUATE_AGGREGATED
+        priority: 100
+        when:
+          field_equals: { field: "adequacy_status", value: ADEQUACY_ADEQUATE }
+        output_lines:
+          - "{specimen_type}, flow cytometry analysis:"
+          - join_lines:
+              lists:
+                - ordered_main_line_texts
+          - "{mainline_terminal_text}"
+
+  comment_generation:
+    templates:
+      - id: CMT_INADEQUATE_VISCOUS_SPECIMEN
+        priority: 300
+        when:
+          all:
+            - field_equals: { field: "adequacy_status", value: ADEQUACY_INADEQUATE }
+            - field_equals: { field: "inadequate_reason", value: INADEQUATE_VISCOUS_SPECIMEN }
+        output_lines:
+          - "The received specimen is very viscous. Unable to dilute or process for flow cytometry. Consider sending for cytology for creating a cell block preparation"
+
+      - id: CMT_ADEQUATE_WITH_VIABILITY_CAUTION
+        priority: 200
+        when:
+          all:
+            - field_equals: { field: "adequacy_status", value: ADEQUACY_ADEQUATE }
+            - field_lt:
+                field: "viability_percent"
+                value_ref: "constants.viability_caution_threshold_percent"
+        output_lines:
+          - join_lines:
+              lists:
+                - comment_lines_with_viability_caution
+
+      - id: CMT_ADEQUATE
+        priority: 100
+        when:
+          field_equals: { field: "adequacy_status", value: ADEQUACY_ADEQUATE }
+        output_lines:
+          - join_lines:
+              lists:
+                - panel_comment_lines
+
+      - id: CMT_EMPTY
+        priority: 1
+        when: { default: true }
+        output_lines: []
+
+  ui_prompts:
+    - step: 1
+      ask:
+        - specimen_type
+        - clinical_data
+
+    - step: 2
+      ask:
+        - adequacy_status
+
+    - step: 3
+      when:
+        field_equals: { field: "adequacy_status", value: ADEQUACY_INADEQUATE }
+      ask:
+        - inadequate_reason
+
+    - step: 4
+      when:
+        all:
+          - field_equals: { field: "adequacy_status", value: ADEQUACY_INADEQUATE }
+          - field_equals: { field: "inadequate_reason", value: INADEQUATE_LOW_VIABILITY }
+      ask:
+        - viability_percent
+
+    - step: 3
+      when:
+        field_equals: { field: "adequacy_status", value: ADEQUACY_ADEQUATE }
+      ask:
+        - viability_percent
+        - selected_panels
+
+    - step: 4
+      when:
+        field_equals: { field: "adequacy_status", value: ADEQUACY_ADEQUATE }
+      action: "run_selected_panel_packs"
+      panels_from_field: "selected_panels"
+      persist_outputs_as: "selected_panel_results"
+
+  final_output_generation:
+    outputs:
+      general: "general_generation"
+      main_line: "main_line_generation"
+      comment: "comment_generation"

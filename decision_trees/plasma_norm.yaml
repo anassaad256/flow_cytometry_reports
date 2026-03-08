@@ -1,0 +1,320 @@
+id: "plasma_cell_myeloma_panel_v3_standardized"
+schema_version: "2.0"
+
+purpose: >
+  Deterministic panel rule pack for the Plasma cell myeloma branch.
+  This pack remains user-outcome-driven: the user selects the plasma-cell outcome,
+  and the pack renders structured findings without inferring clonality from markers.
+
+notes:
+  - This pack conforms to the main-tree preferred output contract.
+  - Shared marker-state semantics and numeric precision are imported from the main tree.
+  - The main tree is the sole owner of the final terminal main-line text.
+  - No placeholder panel fallback main lines are emitted.
+  - Outcome selection remains user-driven by design.
+
+shared_refs:
+  main_tree_pack_ref: "flow_cytometry_main_tree_v2"
+  marker_state_enum_ref: "flow_cytometry_main_tree_v2.enums.marker_state"
+  expressed_states_ref: "flow_cytometry_main_tree_v2.constants.expressed_states"
+  marker_state_suffix_ref: "flow_cytometry_main_tree_v2.constants.marker_state_suffix"
+  percent_precision_decimals_ref: "flow_cytometry_main_tree_v2.constants.percent_precision_decimals"
+  ratio_precision_decimals_ref: "flow_cytometry_main_tree_v2.constants.ratio_precision_decimals"
+  mainline_terminal_text_ref: "flow_cytometry_main_tree_v2.constants.mainline_terminal_text"
+
+output_contract:
+  produces:
+    - antibody_panel_markers
+    - comment_lines
+    - main_line_items
+
+ids:
+  panels:
+    PANEL_PLASMA_CELL_MYELOMA: "Plasma cell myeloma"
+
+  regions:
+    REGION_PLASMA_CELLS: "Plasma cells"
+
+  populations:
+    POP_PLASMA_CELLS: "Plasma cells"
+
+enums:
+  pc_outcome:
+    - PC_INSUFFICIENT
+    - PC_POLYCLONAL
+    - PC_KAPPA_RESTRICTED
+    - PC_LAMBDA_RESTRICTED
+
+constants:
+  marker_ids_plasma_panel:
+    - M_CD38
+    - M_CD138
+    - M_CD45
+    - M_CD19
+    - M_CD56
+    - M_CYTO_KAPPA
+    - M_CYTO_LAMBDA
+
+marker_catalog:
+  M_CD38:         { display: "CD38" }
+  M_CD138:        { display: "CD138" }
+  M_CD45:         { display: "CD45" }
+  M_CD19:         { display: "CD19" }
+  M_CD56:         { display: "CD56" }
+  M_CYTO_KAPPA:   { display: "cytoplasmic kappa light chain", special_name: true }
+  M_CYTO_LAMBDA:  { display: "cytoplasmic lambda light chain", special_name: true }
+
+dsl:
+  predicates:
+    - all
+    - any
+    - not
+    - default
+    - field_present
+    - field_equals
+    - list_nonempty
+
+  derived_values:
+    - percent_pick
+    - ratio_text
+    - enum_string
+    - collect_population_outputs
+
+panel:
+  panel_id: PANEL_PLASMA_CELL_MYELOMA
+  allow_multiple_populations_per_type: false
+
+  inputs:
+    required: []
+    optional: []
+
+  antibody_panel_markers_generation:
+    templates:
+      - id: AB_PC_PANEL
+        priority: 100
+        when: { default: true }
+        markers_ref: marker_ids_plasma_panel
+
+  regions:
+    - region_id: REGION_PLASMA_CELLS
+
+      inputs:
+        required:
+          - region_pct_total
+        optional: []
+
+      region_comment_line_generation:
+        templates:
+          - id: CMT_REGION_PLASMA_CELLS
+            priority: 100
+            when:
+              field_present: "region_pct_total"
+            text: >
+              Immunophenotypic analysis detects approximately {region_pct_total}% plasma cells in area
+              characterized by CD38 positive, CD138 dim, CD45 dim expression and low side scatter pattern
+              in this specimen, after processing.
+
+      populations:
+        - population_id: POP_PLASMA_CELLS
+          allow_multiple: false
+
+          inputs:
+            required:
+              - pct_gated_events
+              - pc_outcome
+            optional:
+              - cd56_state
+              - kappa_percent
+              - lambda_percent
+
+          derived:
+            - id: pct_main
+              type: percent_pick
+              preference_fields: ["pct_gated_events"]
+              precision_decimals_ref: shared_refs.percent_precision_decimals_ref
+
+            - id: kappa_lambda_ratio_text
+              type: ratio_text
+              enabled_when:
+                field_equals: { field: "pc_outcome", value: PC_POLYCLONAL }
+              numerator_field: "kappa_percent"
+              denominator_field: "lambda_percent"
+              precision_decimals_ref: shared_refs.ratio_precision_decimals_ref
+              format:
+                if_kappa_ge_lambda: "{ratio}:1"
+                if_lambda_gt_kappa: "1:{ratio}"
+
+            - id: cd56_clause
+              type: enum_string
+              field: "cd56_state"
+              values:
+                STATE_POSITIVE: " and are positive for CD56"
+                STATE_BRIGHT: " and show bright CD56 expression"
+                STATE_DIM: " and show dim CD56 expression"
+                STATE_SUBSET: " and show subset CD56 expression"
+                STATE_VARIABLE: " and show variable CD56 expression"
+                STATE_NEGATIVE: " and are negative for CD56"
+                STATE_NA: ""
+
+          comment_line_generation:
+            templates:
+              - id: CMT_PC_INSUFFICIENT
+                priority: 100
+                when:
+                  field_equals: { field: "pc_outcome", value: PC_INSUFFICIENT }
+                text: >
+                  These plasma cells are insufficient for further analysis using CD19, CD56,
+                  cytoplasmic kappa light chain, and cytoplasmic lambda light chain.
+
+              - id: CMT_PC_POLYCLONAL
+                priority: 90
+                when:
+                  field_equals: { field: "pc_outcome", value: PC_POLYCLONAL }
+                text: >
+                  These plasma cells are positive for CD19{cd56_clause} with a cytoplasmic kappa to lambda
+                  ratio of {kappa_lambda_ratio_text}.
+
+              - id: CMT_PC_KAPPA_RESTRICTED
+                priority: 80
+                when:
+                  field_equals: { field: "pc_outcome", value: PC_KAPPA_RESTRICTED }
+                text: >
+                  These plasma cells are positive for kappa light chain while negative for lambda light chain{cd56_clause}.
+
+              - id: CMT_PC_LAMBDA_RESTRICTED
+                priority: 70
+                when:
+                  field_equals: { field: "pc_outcome", value: PC_LAMBDA_RESTRICTED }
+                text: >
+                  These plasma cells are positive for lambda light chain while negative for kappa light chain{cd56_clause}.
+
+          main_line_item_generation:
+            templates:
+              - id: ML_PC_KAPPA_RESTRICTED
+                priority: 100
+                when:
+                  field_equals: { field: "pc_outcome", value: PC_KAPPA_RESTRICTED }
+                item:
+                  text: "Immunophenotypic analysis detects {pct_main}% kappa-restricted plasma cells."
+                  finding_priority: 150
+                  finding_class: "PLASMA_CLONAL"
+                  panel_id: PANEL_PLASMA_CELL_MYELOMA
+                  population_id: POP_PLASMA_CELLS
+
+              - id: ML_PC_LAMBDA_RESTRICTED
+                priority: 90
+                when:
+                  field_equals: { field: "pc_outcome", value: PC_LAMBDA_RESTRICTED }
+                item:
+                  text: "Immunophenotypic analysis detects {pct_main}% lambda-restricted plasma cells."
+                  finding_priority: 150
+                  finding_class: "PLASMA_CLONAL"
+                  panel_id: PANEL_PLASMA_CELL_MYELOMA
+                  population_id: POP_PLASMA_CELLS
+
+              - id: ML_PC_POLYCLONAL
+                priority: 80
+                when:
+                  field_equals: { field: "pc_outcome", value: PC_POLYCLONAL }
+                item:
+                  text: "Immunophenotypic analysis detects {pct_main}% polyclonal plasma cells."
+                  finding_priority: 700
+                  finding_class: "PLASMA_POLYCLONAL"
+                  panel_id: PANEL_PLASMA_CELL_MYELOMA
+                  population_id: POP_PLASMA_CELLS
+
+              - id: ML_PC_INSUFFICIENT
+                priority: 70
+                when:
+                  field_equals: { field: "pc_outcome", value: PC_INSUFFICIENT }
+                item:
+                  text: "Immunophenotypic analysis detects {pct_main}% plasma cells, insufficient for further analysis."
+                  finding_priority: 500
+                  finding_class: "PLASMA_INSUFFICIENT"
+                  panel_id: PANEL_PLASMA_CELL_MYELOMA
+                  population_id: POP_PLASMA_CELLS
+
+          validations:
+            - id: V_PC_OUTCOME_REQUIRED
+              severity: ERROR
+              when:
+                not: { field_present: "pc_outcome" }
+              message: "pc_outcome is required."
+
+            - id: V_PC_CD56_REQUIRED_FOR_RESTRICTED
+              severity: ERROR
+              when:
+                any:
+                  - all:
+                      - field_equals: { field: "pc_outcome", value: PC_KAPPA_RESTRICTED }
+                      - not: { field_present: "cd56_state" }
+                  - all:
+                      - field_equals: { field: "pc_outcome", value: PC_LAMBDA_RESTRICTED }
+                      - not: { field_present: "cd56_state" }
+              message: "Restricted outcomes require cd56_state."
+
+            - id: V_PC_POLYCLONAL_REQUIRES_FIELDS
+              severity: ERROR
+              when:
+                all:
+                  - field_equals: { field: "pc_outcome", value: PC_POLYCLONAL }
+                  - any:
+                      - not: { field_present: "cd56_state" }
+                      - not: { field_present: "kappa_percent" }
+                      - not: { field_present: "lambda_percent" }
+              message: "Polyclonal outcome requires cd56_state, kappa_percent, and lambda_percent."
+
+  comment_lines_generation:
+    output_format: "line_list"
+    order:
+      - region_comment
+      - populations_of_type: POP_PLASMA_CELLS
+
+  main_line_items_generation:
+    derived:
+      - id: plasma_main_line_items
+        type: collect_population_outputs
+        args:
+          population_id: POP_PLASMA_CELLS
+          output_kind: "main_line_item"
+
+    templates:
+      - id: ML_PANEL_PC
+        priority: 100
+        when:
+          list_nonempty: "plasma_main_line_items"
+        output_items_from:
+          - plasma_main_line_items
+
+      - id: ML_PANEL_PC_EMPTY
+        priority: 1
+        when: { default: true }
+        output_items: []
+
+  ui_prompts:
+    - step: 1
+      ask:
+        - region_pct_total
+        - pct_gated_events
+        - pc_outcome
+
+    - step: 2
+      when:
+        field_equals: { field: "pc_outcome", value: PC_INSUFFICIENT }
+      ask: []
+
+    - step: 2
+      when:
+        any:
+          - field_equals: { field: "pc_outcome", value: PC_KAPPA_RESTRICTED }
+          - field_equals: { field: "pc_outcome", value: PC_LAMBDA_RESTRICTED }
+      ask:
+        - cd56_state
+
+    - step: 2
+      when:
+        field_equals: { field: "pc_outcome", value: PC_POLYCLONAL }
+      ask:
+        - cd56_state
+        - kappa_percent
+        - lambda_percent
