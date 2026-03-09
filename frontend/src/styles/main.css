@@ -225,16 +225,52 @@ body {
 }
 
 /* Marker Grid */
-.marker-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+.marker-state-table {
   margin-top: 8px;
+  border: 1px solid #dfe6e9;
+  border-radius: 6px;
+  overflow: hidden;
 }
 
-.marker-chip:hover {
-  opacity: 0.85;
-  transform: scale(1.03);
+.marker-state-header {
+  display: flex;
+  background: #f0f0f0;
+  font-weight: 600;
+  font-size: 0.8rem;
+  border-bottom: 1px solid #dfe6e9;
+}
+
+.marker-state-row {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.marker-state-row:last-child {
+  border-bottom: none;
+}
+
+.marker-state-row:hover {
+  background: #f9f9f9;
+}
+
+.marker-name-col {
+  min-width: 90px;
+  padding: 6px 12px;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.marker-check-col {
+  flex: 1;
+  text-align: center;
+  padding: 6px 4px;
+}
+
+.marker-check-col input[type="checkbox"] {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
 }
 
 /* Report Output */
