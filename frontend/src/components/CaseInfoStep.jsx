@@ -1,19 +1,24 @@
-import React from 'react'
+import React, { useState } from 'react'
 
-const SPECIMEN_CHOICES = ['Bone marrow', 'Blood', 'Lymph node', 'Other']
+const PRESET_SPECIMENS = ['Bone marrow', 'Blood', 'Lymph node']
 
 export default function CaseInfoStep({ state, updateField, onNext }) {
-  const specimenSelected = state.specimen_type.trim() !== ''
-  const canProceed = specimenSelected
+  const isPreset = PRESET_SPECIMENS.includes(state.specimen_type)
+  const [otherMode, setOtherMode] = useState(!isPreset && state.specimen_type !== '')
 
-  // Determine which choice is active
-  const isPreset = SPECIMEN_CHOICES.slice(0, -1).includes(state.specimen_type)
-  const isOther = specimenSelected && !isPreset
+  const canProceed = state.specimen_type.trim() !== ''
 
   const handleChoice = (choice) => {
     if (choice === 'Other') {
-      updateField('specimen_type', isOther ? '' : ' ')
+      if (otherMode) {
+        setOtherMode(false)
+        updateField('specimen_type', '')
+      } else {
+        setOtherMode(true)
+        updateField('specimen_type', '')
+      }
     } else {
+      setOtherMode(false)
       updateField('specimen_type', state.specimen_type === choice ? '' : choice)
     }
   }
@@ -24,25 +29,27 @@ export default function CaseInfoStep({ state, updateField, onNext }) {
       <div className="form-group">
         <label>Specimen Type</label>
         <div className="radio-group">
-          {SPECIMEN_CHOICES.map(choice => (
+          {PRESET_SPECIMENS.map(choice => (
             <div
               key={choice}
-              className={`radio-option${
-                choice === 'Other'
-                  ? isOther ? ' selected' : ''
-                  : state.specimen_type === choice ? ' selected' : ''
-              }`}
+              className={`radio-option${state.specimen_type === choice ? ' selected' : ''}`}
               onClick={() => handleChoice(choice)}
             >
               {choice}
             </div>
           ))}
+          <div
+            className={`radio-option${otherMode ? ' selected' : ''}`}
+            onClick={() => handleChoice('Other')}
+          >
+            Other
+          </div>
         </div>
-        {isOther && (
+        {otherMode && (
           <input
             type="text"
-            value={state.specimen_type.trim()}
-            onChange={e => updateField('specimen_type', e.target.value || ' ')}
+            value={state.specimen_type}
+            onChange={e => updateField('specimen_type', e.target.value)}
             placeholder="Specify specimen type"
             style={{ marginTop: '8px' }}
             autoFocus
