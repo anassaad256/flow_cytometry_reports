@@ -377,8 +377,9 @@ function RegionField({ field, value, onChange }) {
           step="0.01"
           min="0"
           max="100"
-          value={value}
-          onChange={e => onChange(field, e.target.value ? parseFloat(e.target.value) : '')}
+          value={value ?? ''}
+          onChange={e => onChange(field, e.target.value === '' ? '' : e.target.value)}
+          onBlur={e => { if (e.target.value !== '') onChange(field, parseFloat(e.target.value)) }}
           placeholder="0.00"
         />
       </div>

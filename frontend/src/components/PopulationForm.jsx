@@ -22,18 +22,15 @@ export default function PopulationForm({
     const newFields = { ...population.fields, [field]: value }
 
     // Auto-calculate between pct_gated_events and pct_region using region_pct_total
-    const regionPct = regionFields?.region_pct_total
-    if (regionPct && parseFloat(regionPct) > 0) {
-      const rp = parseFloat(regionPct)
-      if (field === 'pct_gated_events' && value !== '' && value != null) {
-        const gated = parseFloat(value)
-        if (!isNaN(gated)) {
-          newFields.pct_region = Math.round((gated / rp) * 10000) / 100
-        }
-      } else if (field === 'pct_region' && value !== '' && value != null) {
-        const region = parseFloat(value)
-        if (!isNaN(region)) {
-          newFields.pct_gated_events = Math.round((region * rp) / 100 * 100) / 100
+    // Only auto-calc when value is a finalized number (not a string being typed)
+    if (typeof value === 'number') {
+      const regionPct = regionFields?.region_pct_total
+      if (regionPct && parseFloat(regionPct) > 0) {
+        const rp = parseFloat(regionPct)
+        if (field === 'pct_gated_events') {
+          newFields.pct_region = Math.round((value / rp) * 10000) / 100
+        } else if (field === 'pct_region') {
+          newFields.pct_gated_events = Math.round((value * rp) / 100 * 100) / 100
         }
       }
     }
@@ -241,8 +238,9 @@ function renderField(field, value, updateField, panelEnums) {
           step="0.01"
           min="0"
           max="100"
-          value={value || ''}
-          onChange={e => updateField(field, e.target.value ? parseFloat(e.target.value) : '')}
+          value={value ?? ''}
+          onChange={e => updateField(field, e.target.value === '' ? '' : e.target.value)}
+          onBlur={e => { if (e.target.value !== '') updateField(field, parseFloat(e.target.value)) }}
           placeholder="0.00"
         />
       </div>
