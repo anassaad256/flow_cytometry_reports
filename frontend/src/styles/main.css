@@ -226,35 +226,15 @@ body {
 
 /* Marker Grid */
 .marker-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-top: 8px;
 }
 
-.marker-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  border: 1px solid #dfe6e9;
-  border-radius: 6px;
-  background: #fafafa;
-}
-
-.marker-item label {
-  font-size: 0.85rem;
-  font-weight: 600;
-  min-width: 80px;
-}
-
-.marker-item select {
-  flex: 1;
-  padding: 4px 6px;
-  border: 1px solid #dfe6e9;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  background: white;
+.marker-chip:hover {
+  opacity: 0.85;
+  transform: scale(1.03);
 }
 
 /* Report Output */
