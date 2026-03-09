@@ -109,7 +109,7 @@ class PanelInput(BaseModel):
 
 class CaseInput(BaseModel):
     specimen_type: str
-    clinical_data: str
+    clinical_data: str = ""
     adequacy_status: str  # "ADEQUACY_ADEQUATE" or "ADEQUACY_INADEQUATE"
     inadequate_reason: Optional[str] = None
     viability_percent: Optional[float] = None
