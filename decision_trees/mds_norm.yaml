@@ -43,26 +43,26 @@ ids:
 
 constants:
   marker_display_order_MDS:
-    - M_CD14
-    - M_CD13
-    - M_CD33
-    - M_CD117
     - M_CD34
-    - M_CD19
+    - M_CD117
+    - M_CD33
+    - M_CD13
     - M_CD7
-    - M_CD45
+    - M_CD19
+    - M_CD14
     - M_CD64
+    - M_CD45
 
   marker_ids_mds:
-    - M_CD14
-    - M_CD13
-    - M_CD33
-    - M_CD117
     - M_CD34
-    - M_CD19
+    - M_CD117
+    - M_CD33
+    - M_CD13
     - M_CD7
-    - M_CD45
+    - M_CD19
+    - M_CD14
     - M_CD64
+    - M_CD45
 
 marker_catalog:
   M_CD14:  { display: "CD14" }
