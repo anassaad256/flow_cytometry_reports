@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - claude/flow-cytometry-report-generator-e0Tsd
 
 permissions:
   contents: read
