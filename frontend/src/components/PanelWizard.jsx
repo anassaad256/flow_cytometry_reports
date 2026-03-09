@@ -374,12 +374,12 @@ function RegionField({ field, value, onChange }) {
         <label>{label} (optional)</label>
         <input
           type="number"
-          step="0.1"
+          step="0.01"
           min="0"
           max="100"
           value={value}
           onChange={e => onChange(field, e.target.value ? parseFloat(e.target.value) : '')}
-          placeholder="0.0"
+          placeholder="0.00"
         />
       </div>
     )

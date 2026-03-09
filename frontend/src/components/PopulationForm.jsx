@@ -243,7 +243,7 @@ function renderField(field, value, updateField, panelEnums) {
           max="100"
           value={value || ''}
           onChange={e => updateField(field, e.target.value ? parseFloat(e.target.value) : '')}
-          placeholder="0.0"
+          placeholder="0.00"
         />
       </div>
     )
