@@ -263,9 +263,10 @@ body {
 }
 
 .marker-check-col {
-  flex: 0 0 auto;
+  width: 65px;
+  min-width: 65px;
   text-align: center;
-  padding: 4px 6px;
+  padding: 4px 2px;
 }
 
 .marker-check-col input[type="checkbox"] {
