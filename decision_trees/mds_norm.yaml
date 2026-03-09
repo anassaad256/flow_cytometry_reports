@@ -43,37 +43,96 @@ ids:
 
 constants:
   marker_display_order_MDS:
-    - M_CD14
-    - M_CD13
-    - M_CD33
-    - M_CD117
     - M_CD34
-    - M_CD19
+    - M_CD117
+    - M_CD33
+    - M_CD13
     - M_CD7
-    - M_CD45
+    - M_CD19
+    - M_CD14
+    - M_CD10
+    - M_CD38
+    - M_CD22
+    - M_CD11C
+    - M_CD5
+    - M_CD36
     - M_CD64
+    - M_HLA_DR
+    - M_CD56
+    - M_CD4
+    - M_CD20
+    - M_TDT
+    - M_MPO
+    - M_CYTO_CD79A
+    - M_CYTO_CD3
 
-  marker_ids_mds:
-    - M_CD14
-    - M_CD13
-    - M_CD33
-    - M_CD117
+  marker_ids_mds_blasts:
     - M_CD34
-    - M_CD19
+    - M_CD117
+    - M_CD33
+    - M_CD13
     - M_CD7
-    - M_CD45
+    - M_CD19
+    - M_CD14
+    - M_CD10
+    - M_CD38
+    - M_CD22
+    - M_CD11C
+    - M_CD5
+    - M_CD36
     - M_CD64
+    - M_HLA_DR
+    - M_CD56
+    - M_CD4
+    - M_CD20
+    - M_TDT
+    - M_MPO
+    - M_CYTO_CD79A
+    - M_CYTO_CD3
+
+  marker_ids_mds_monocyte:
+    - M_CD34
+    - M_CD117
+    - M_CD33
+    - M_CD13
+    - M_CD7
+    - M_CD19
+    - M_CD14
+    - M_CD10
+    - M_CD38
+    - M_CD22
+    - M_CD11C
+    - M_CD5
+    - M_CD36
+    - M_CD64
+    - M_HLA_DR
+    - M_CD56
+    - M_CD4
+    - M_CD20
 
 marker_catalog:
-  M_CD14:  { display: "CD14" }
-  M_CD13:  { display: "CD13" }
-  M_CD33:  { display: "CD33" }
-  M_CD117: { display: "CD117" }
-  M_CD34:  { display: "CD34" }
-  M_CD19:  { display: "CD19" }
-  M_CD7:   { display: "CD7" }
-  M_CD45:  { display: "CD45" }
-  M_CD64:  { display: "CD64" }
+  M_CD34:       { display: "CD34" }
+  M_CD117:      { display: "CD117" }
+  M_CD33:       { display: "CD33" }
+  M_CD13:       { display: "CD13" }
+  M_CD7:        { display: "CD7" }
+  M_CD19:       { display: "CD19" }
+  M_CD14:       { display: "CD14" }
+  M_CD10:       { display: "CD10" }
+  M_CD38:       { display: "CD38" }
+  M_CD22:       { display: "CD22" }
+  M_CD11C:      { display: "CD11c" }
+  M_CD5:        { display: "CD5" }
+  M_CD36:       { display: "CD36" }
+  M_CD64:       { display: "CD64" }
+  M_HLA_DR:     { display: "HLA-DR" }
+  M_CD56:       { display: "CD56" }
+  M_CD4:        { display: "CD4" }
+  M_CD20:       { display: "CD20" }
+  M_TDT:        { display: "TdT" }
+  M_MPO:        { display: "MPO" }
+  M_CYTO_CD79A: { display: "cCD79a" }
+  M_CYTO_CD3:   { display: "cCD3" }
 
 dsl:
   predicates:
@@ -106,7 +165,10 @@ panel:
       - id: AB_MDS
         priority: 100
         when: { default: true }
-        markers_ref: marker_ids_mds
+        markers_ref: marker_ids_mds_blasts
+
+  # Note: antibody panel uses blast markers (superset including cyto)
+  # Monocyte markers are a subset, so blast list covers all
 
   regions:
     - region_id: REGION_BLASTS
@@ -127,7 +189,7 @@ panel:
               - id: BLAST_MARKERS_MDS
                 priority: 100
                 when: { default: true }
-                markers_ref: marker_ids_mds
+                markers_ref: marker_ids_mds_blasts
 
           inputs:
             required:
@@ -243,7 +305,7 @@ panel:
               - id: MONOCYTE_MARKERS_MDS
                 priority: 100
                 when: { default: true }
-                markers_ref: marker_ids_mds
+                markers_ref: marker_ids_mds_monocyte
 
           inputs:
             required:

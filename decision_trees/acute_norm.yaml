@@ -52,19 +52,18 @@ enums:
 
 constants:
   marker_display_order_ACUTE:
-    - M_CD14
-    - M_CD13
-    - M_CD33
-    - M_CD117
     - M_CD34
-    - M_CD19
+    - M_CD117
+    - M_CD33
+    - M_CD13
     - M_CD7
-    - M_CD45
+    - M_CD19
+    - M_CD14
+    - M_CD10
+    - M_CD38
     - M_CD22
     - M_CD11C
     - M_CD5
-    - M_CD10
-    - M_CD38
     - M_CD36
     - M_CD64
     - M_HLA_DR
@@ -73,23 +72,22 @@ constants:
     - M_CD20
     - M_TDT
     - M_MPO
-    - M_CYTO_CD3
     - M_CYTO_CD79A
+    - M_CYTO_CD3
 
   marker_ids_no_cyto:
-    - M_CD14
-    - M_CD13
-    - M_CD33
-    - M_CD117
     - M_CD34
-    - M_CD19
+    - M_CD117
+    - M_CD33
+    - M_CD13
     - M_CD7
-    - M_CD45
+    - M_CD19
+    - M_CD14
+    - M_CD10
+    - M_CD38
     - M_CD22
     - M_CD11C
     - M_CD5
-    - M_CD10
-    - M_CD38
     - M_CD36
     - M_CD64
     - M_HLA_DR
@@ -98,19 +96,18 @@ constants:
     - M_CD20
 
   marker_ids_with_cyto:
-    - M_CD14
-    - M_CD13
-    - M_CD33
-    - M_CD117
     - M_CD34
-    - M_CD19
+    - M_CD117
+    - M_CD33
+    - M_CD13
     - M_CD7
-    - M_CD45
+    - M_CD19
+    - M_CD14
+    - M_CD10
+    - M_CD38
     - M_CD22
     - M_CD11C
     - M_CD5
-    - M_CD10
-    - M_CD38
     - M_CD36
     - M_CD64
     - M_HLA_DR
@@ -119,8 +116,28 @@ constants:
     - M_CD20
     - M_TDT
     - M_MPO
-    - M_CYTO_CD3
     - M_CYTO_CD79A
+    - M_CYTO_CD3
+
+  marker_ids_monocyte:
+    - M_CD34
+    - M_CD117
+    - M_CD33
+    - M_CD13
+    - M_CD7
+    - M_CD19
+    - M_CD14
+    - M_CD10
+    - M_CD38
+    - M_CD22
+    - M_CD11C
+    - M_CD5
+    - M_CD36
+    - M_CD64
+    - M_HLA_DR
+    - M_CD56
+    - M_CD4
+    - M_CD20
 
 marker_catalog:
   M_CD14:       { display: "CD14" }
@@ -430,17 +447,10 @@ panel:
 
           active_markers_generation:
             templates:
-              - id: MONOCYTE_MARKERS_NO_CYTO
+              - id: MONOCYTE_MARKERS
                 priority: 100
-                when:
-                  field_equals: { field: "cyto_tube_performed", value: CYTO_TUBE_NO }
-                markers_ref: marker_ids_no_cyto
-
-              - id: MONOCYTE_MARKERS_WITH_CYTO
-                priority: 90
-                when:
-                  field_equals: { field: "cyto_tube_performed", value: CYTO_TUBE_YES }
-                markers_ref: marker_ids_with_cyto
+                when: { default: true }
+                markers_ref: marker_ids_monocyte
 
           inputs:
             required:
