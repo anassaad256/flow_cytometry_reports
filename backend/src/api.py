@@ -2,9 +2,12 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 from .models import CaseInput, ReportOutput
 from .report_generator import ReportGenerator
@@ -60,3 +63,17 @@ def get_panel_schema(panel_id: str):
 def get_enums():
     """Return global enums for the UI."""
     return generator.get_global_enums()
+
+
+# Serve frontend static files in production
+_frontend_dist = Path(__file__).resolve().parent.parent.parent / "frontend" / "dist"
+if _frontend_dist.is_dir():
+    app.mount("/assets", StaticFiles(directory=_frontend_dist / "assets"), name="assets")
+
+    @app.get("/{full_path:path}")
+    def serve_spa(full_path: str):
+        """Serve frontend SPA — fallback to index.html for client-side routing."""
+        file_path = _frontend_dist / full_path
+        if full_path and file_path.is_file():
+            return FileResponse(file_path)
+        return FileResponse(_frontend_dist / "index.html")
