@@ -1,12 +1,12 @@
 import React from 'react'
 
 const STATES = [
-  { value: 'STATE_POSITIVE', label: 'Pos' },
+  { value: 'STATE_NEGATIVE', label: 'Negative' },
+  { value: 'STATE_POSITIVE', label: 'Positive' },
   { value: 'STATE_BRIGHT', label: 'Bright' },
   { value: 'STATE_DIM', label: 'Dim' },
-  { value: 'STATE_NEGATIVE', label: 'Neg' },
-  { value: 'STATE_SUBSET', label: 'Sub' },
-  { value: 'STATE_VARIABLE', label: 'Var' },
+  { value: 'STATE_SUBSET', label: 'Subset' },
+  { value: 'STATE_VARIABLE', label: 'Variable' },
 ]
 
 export default function MarkerStateGrid({ markers, markerCatalog, markerStates, onChange }) {

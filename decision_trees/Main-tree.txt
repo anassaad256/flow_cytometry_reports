@@ -50,7 +50,7 @@ constants:
     STATE_SUBSET: "subset"
     STATE_VARIABLE: "variable"
 
-  percent_precision_decimals: 1
+  percent_precision_decimals: 2
   ratio_precision_decimals: 1
 
   viability_caution_threshold_percent: 50

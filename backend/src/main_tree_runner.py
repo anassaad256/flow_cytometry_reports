@@ -111,19 +111,17 @@ class MainTreeRunner:
             "viability_caution_threshold_percent", 50
         )
         if case_input.viability_percent is not None and case_input.viability_percent < viability_threshold:
-            precision = self.spec.get("constants", {}).get("percent_precision_decimals", 1)
-            v_str = f"{case_input.viability_percent:.{precision}f}"
+            v_str = f"{case_input.viability_percent:.0f}"
             caution = (
                 f"Given the reduced specimen viability ({v_str}%), "
                 f"these results need to be interpreted with caution"
             )
             all_comment_lines.append(caution)
 
-        # Format viability line
-        precision = self.spec.get("constants", {}).get("percent_precision_decimals", 1)
+        # Format viability line (no decimals for viability)
         viability_str = ""
         if case_input.viability_percent is not None:
-            viability_str = f"{case_input.viability_percent:.{precision}f}"
+            viability_str = f"{case_input.viability_percent:.0f}"
 
         # Store in context
         ctx.set_derived("antibody_panel_markers_deduped", deduped_markers)
@@ -154,9 +152,10 @@ class MainTreeRunner:
             if antibody_line:
                 lines.append(antibody_line)
 
-        # Lab disclaimer
+        # Lab disclaimer (with empty line separator)
         lab_disclaimer = self.spec.get("constants", {}).get("lab_disclaimer_text", "")
         if lab_disclaimer and lab_disclaimer != "__LAB_DISCLAIMER__":
+            lines.append("")
             lines.append(lab_disclaimer)
 
         return lines
@@ -183,8 +182,7 @@ class MainTreeRunner:
                 lines.append("- Unable to perform flow cytometry, see comment")
             elif reason == "INADEQUATE_LOW_VIABILITY":
                 viability = ctx.get("viability_percent")
-                precision = self.spec.get("constants", {}).get("percent_precision_decimals", 1)
-                v_str = f"{viability:.{precision}f}" if viability is not None else "N/A"
+                v_str = f"{viability:.0f}" if viability is not None else "N/A"
                 lines.append(f"{specimen}, flow cytometry analysis:")
                 lines.append(
                     f"- Flow cytometry analysis is attempted. However, meaningful interpretation "

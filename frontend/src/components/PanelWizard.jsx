@@ -340,6 +340,7 @@ function RegionsEditor({ schema, panelData, onChange }) {
                   population={pop}
                   populationSpec={popSpec}
                   panelSchema={schemaWithFields}
+                  regionFields={regionData.fields || {}}
                   index={idx}
                   onChange={(newPop) => updatePopulation(regionId, idx, newPop)}
                   onRemove={() => removePopulation(regionId, idx)}

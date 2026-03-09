@@ -408,37 +408,15 @@ panel:
         required: []
         optional:
           - region_pct_total
-          - region_features_text
 
       region_comment_line_generation:
         templates:
-          - id: CMT_REGION_LYMPHOCYTES_FULL
+          - id: CMT_REGION_LYMPHOCYTES_PCT_ONLY
             priority: 100
             when:
-              all:
-                - field_present: "region_pct_total"
-                - field_present: "region_features_text"
-            text: >
-              Immunophenotypic analysis detects approximately {region_pct_total}% lymphocytes
-              characterized by {region_features_text}.
-
-          - id: CMT_REGION_LYMPHOCYTES_PCT_ONLY
-            priority: 90
-            when:
-              all:
-                - field_present: "region_pct_total"
-                - not: { field_present: "region_features_text" }
+              field_present: "region_pct_total"
             text: >
               Immunophenotypic analysis detects approximately {region_pct_total}% lymphocytes in this specimen.
-
-          - id: CMT_REGION_LYMPHOCYTES_FEATURES_ONLY
-            priority: 80
-            when:
-              all:
-                - not: { field_present: "region_pct_total" }
-                - field_present: "region_features_text"
-            text: >
-              Immunophenotypic analysis identifies a lymphocyte population characterized by {region_features_text}.
 
       populations:
         - population_id: POP_B_CELLS
@@ -463,7 +441,6 @@ panel:
               - pct_gated_events
               - marker_states
             optional:
-              - pct_all_viable
               - pct_region
               - fsc_size
               - kappa_percent
@@ -494,12 +471,12 @@ panel:
 
             - id: pct_main
               type: percent_pick
-              preference_fields: ["pct_gated_events", "pct_all_viable", "pct_region"]
+              preference_fields: ["pct_gated_events", "pct_region"]
               precision_decimals_ref: shared_refs.percent_precision_decimals_ref
 
             - id: pct_comment
               type: percent_pick
-              preference_fields: ["pct_region", "pct_all_viable", "pct_gated_events"]
+              preference_fields: ["pct_region", "pct_gated_events"]
               precision_decimals_ref: shared_refs.percent_precision_decimals_ref
 
             - id: restricted_label
@@ -601,7 +578,6 @@ panel:
                 when:
                   any:
                     - field_equals: { field: "pct_gated_events", value: 0 }
-                    - field_equals: { field: "pct_all_viable", value: 0 }
                     - field_equals: { field: "pct_region", value: 0 }
                 text: "No CD19-positive B cells detected."
 
@@ -618,7 +594,6 @@ panel:
                     - not:
                         any:
                           - field_equals: { field: "pct_gated_events", value: 0 }
-                          - field_equals: { field: "pct_all_viable", value: 0 }
                           - field_equals: { field: "pct_region", value: 0 }
                 text: "Less than {pct_comment}% B cells identified, insufficient for further analysis."
 
@@ -725,7 +700,6 @@ panel:
               - marker_states
               - t_normality
             optional:
-              - pct_all_viable
               - pct_region
               - cd4_percent
               - cd8_percent
@@ -760,12 +734,12 @@ panel:
 
             - id: pct_main
               type: percent_pick
-              preference_fields: ["pct_gated_events", "pct_all_viable", "pct_region"]
+              preference_fields: ["pct_gated_events", "pct_region"]
               precision_decimals_ref: shared_refs.percent_precision_decimals_ref
 
             - id: pct_comment
               type: percent_pick
-              preference_fields: ["pct_region", "pct_all_viable", "pct_gated_events"]
+              preference_fields: ["pct_region", "pct_gated_events"]
               precision_decimals_ref: shared_refs.percent_precision_decimals_ref
 
             - id: cd4_cd8_ratio_text
@@ -900,7 +874,6 @@ panel:
               - marker_states
               - t_normality
             optional:
-              - pct_all_viable
               - pct_region
 
           tags:
@@ -933,12 +906,12 @@ panel:
 
             - id: pct_main
               type: percent_pick
-              preference_fields: ["pct_gated_events", "pct_all_viable", "pct_region"]
+              preference_fields: ["pct_gated_events", "pct_region"]
               precision_decimals_ref: shared_refs.percent_precision_decimals_ref
 
             - id: pct_comment
               type: percent_pick
-              preference_fields: ["pct_region", "pct_all_viable", "pct_gated_events"]
+              preference_fields: ["pct_region", "pct_gated_events"]
               precision_decimals_ref: shared_refs.percent_precision_decimals_ref
 
           comment_line_generation:
@@ -1086,7 +1059,6 @@ panel:
         context_population_equals: POP_B_CELLS
       ask:
         - pct_gated_events
-        - pct_all_viable
         - pct_region
         - fsc_size
 
@@ -1095,7 +1067,6 @@ panel:
         context_population_equals: POP_T_CELLS
       ask:
         - pct_gated_events
-        - pct_all_viable
         - pct_region
         - t_normality
 
@@ -1104,7 +1075,6 @@ panel:
         context_population_equals: POP_TLGL
       ask:
         - pct_gated_events
-        - pct_all_viable
         - pct_region
         - t_normality
 
