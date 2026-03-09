@@ -236,8 +236,9 @@ body {
   display: flex;
   background: #f0f0f0;
   font-weight: 600;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   border-bottom: 1px solid #dfe6e9;
+  gap: 0;
 }
 
 .marker-state-row {
@@ -262,9 +263,9 @@ body {
 }
 
 .marker-check-col {
-  flex: 1;
+  flex: 0 0 auto;
   text-align: center;
-  padding: 6px 4px;
+  padding: 4px 6px;
 }
 
 .marker-check-col input[type="checkbox"] {
@@ -298,6 +299,7 @@ body {
   white-space: pre-wrap;
   line-height: 1.6;
   border: 1px solid #dfe6e9;
+  color: #000000;
 }
 
 .copy-btn {

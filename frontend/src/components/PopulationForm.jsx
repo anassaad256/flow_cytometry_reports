@@ -5,6 +5,7 @@ export default function PopulationForm({
   population,
   populationSpec,
   panelSchema,
+  regionFields,
   index,
   onChange,
   onRemove,
@@ -18,9 +19,28 @@ export default function PopulationForm({
   const activeMarkers = getActiveMarkers(populationSpec, panelSchema)
 
   const updateField = (field, value) => {
+    const newFields = { ...population.fields, [field]: value }
+
+    // Auto-calculate between pct_gated_events and pct_region using region_pct_total
+    const regionPct = regionFields?.region_pct_total
+    if (regionPct && parseFloat(regionPct) > 0) {
+      const rp = parseFloat(regionPct)
+      if (field === 'pct_gated_events' && value !== '' && value != null) {
+        const gated = parseFloat(value)
+        if (!isNaN(gated)) {
+          newFields.pct_region = Math.round((gated / rp) * 10000) / 100
+        }
+      } else if (field === 'pct_region' && value !== '' && value != null) {
+        const region = parseFloat(value)
+        if (!isNaN(region)) {
+          newFields.pct_gated_events = Math.round((region * rp) / 100 * 100) / 100
+        }
+      }
+    }
+
     const updated = {
       ...population,
-      fields: { ...population.fields, [field]: value }
+      fields: newFields
     }
     onChange(updated)
   }
@@ -55,6 +75,13 @@ export default function PopulationForm({
       {/* Render required/optional fields */}
       {[...requiredInputs, ...optionalInputs]
         .filter(f => f !== 'marker_states')
+        .filter(f => {
+          // Hide kappa_percent/lambda_percent for plasma cells unless polyclonal
+          if ((f === 'kappa_percent' || f === 'lambda_percent') && popId === 'POP_PLASMA_CELLS') {
+            return population.fields.pc_outcome === 'PC_POLYCLONAL'
+          }
+          return true
+        })
         .map(field => renderField(field, population.fields[field], updateField, panelEnums))}
 
       {/* Marker state grid */}
@@ -211,7 +238,7 @@ function renderField(field, value, updateField, panelEnums) {
         <label>{label}</label>
         <input
           type="number"
-          step="0.1"
+          step="0.01"
           min="0"
           max="100"
           value={value || ''}

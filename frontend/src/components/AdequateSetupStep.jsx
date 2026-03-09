@@ -11,12 +11,12 @@ export default function AdequateSetupStep({ state, updateField, togglePanel, pan
         <label>Viability (%)</label>
         <input
           type="number"
-          step="0.1"
+          step="1"
           min="0"
           max="100"
           value={state.viability_percent}
           onChange={e => updateField('viability_percent', e.target.value)}
-          placeholder="e.g., 85.3"
+          placeholder="e.g., 85"
         />
       </div>
 
