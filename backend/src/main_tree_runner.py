@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from .context import EvaluationContext
+from .derived import _fmt_number
 from .models import CaseInput, MainLineItem, PanelOutput, ReportOutput, ValidationResult
 from .panel_runner import PanelRunner
 from .template_selector import select_template
@@ -111,7 +112,7 @@ class MainTreeRunner:
             "viability_caution_threshold_percent", 50
         )
         if case_input.viability_percent is not None and case_input.viability_percent < viability_threshold:
-            v_str = f"{case_input.viability_percent:.0f}"
+            v_str = _fmt_number(case_input.viability_percent, 0)
             caution = (
                 f"Given the reduced specimen viability ({v_str}%), "
                 f"these results need to be interpreted with caution"
@@ -121,7 +122,7 @@ class MainTreeRunner:
         # Format viability line (no decimals for viability)
         viability_str = ""
         if case_input.viability_percent is not None:
-            viability_str = f"{case_input.viability_percent:.0f}"
+            viability_str = _fmt_number(case_input.viability_percent, 0)
 
         # Store in context
         ctx.set_derived("antibody_panel_markers_deduped", deduped_markers)
@@ -182,7 +183,7 @@ class MainTreeRunner:
                 lines.append("- Unable to perform flow cytometry, see comment")
             elif reason == "INADEQUATE_LOW_VIABILITY":
                 viability = ctx.get("viability_percent")
-                v_str = f"{viability:.0f}" if viability is not None else "N/A"
+                v_str = _fmt_number(viability, 0) if viability is not None else "N/A"
                 lines.append(f"{specimen}, flow cytometry analysis:")
                 lines.append(
                     f"- Flow cytometry analysis is attempted. However, meaningful interpretation "
@@ -207,6 +208,7 @@ class MainTreeRunner:
             reason = ctx.get("inadequate_reason")
             if reason == "INADEQUATE_VISCOUS_SPECIMEN":
                 return [
+                    "Comment:",
                     "The received specimen is very viscous. Unable to dilute or process "
                     "for flow cytometry. Consider sending for cytology for creating a "
                     "cell block preparation"
@@ -214,4 +216,6 @@ class MainTreeRunner:
             return []
 
         comment_lines = ctx.get("panel_comment_lines") or []
-        return list(comment_lines)
+        if comment_lines:
+            return ["Comment:"] + list(comment_lines)
+        return []

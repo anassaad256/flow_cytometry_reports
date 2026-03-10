@@ -24,7 +24,7 @@ def test_percent_pick_fallback():
         {"type": "percent_pick", "preference_fields": ["missing_field"]},
         ctx,
     )
-    assert result == "0.0"
+    assert result == "0"
 
 
 def test_enum_string_from_tag():
@@ -88,7 +88,7 @@ def test_ratio_text():
         },
         ctx,
     )
-    assert result == "2.0:1"
+    assert result == "2:1"
 
 
 def test_population_exists_with_tag():

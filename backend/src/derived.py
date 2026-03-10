@@ -3,6 +3,11 @@ from __future__ import annotations
 
 from typing import Any
 
+
+def _fmt_number(value: float, precision: int) -> str:
+    """Format a number with given precision, stripping trailing zeros."""
+    return f"{value:.{precision}f}".rstrip('0').rstrip('.')
+
 from .context import EvaluationContext
 from .models import EXPRESSED_STATES, MARKER_STATE_SUFFIX, MarkerState
 from .predicates import evaluate_predicate
@@ -125,10 +130,10 @@ def compute_percent_pick(spec: dict, ctx: EvaluationContext) -> str:
         val = ctx.get(field)
         if val is not None:
             try:
-                return f"{float(val):.{precision}f}"
+                return _fmt_number(float(val), precision)
             except (ValueError, TypeError):
                 continue
-    return "0.0"
+    return "0"
 
 
 def compute_ratio_text(spec: dict, ctx: EvaluationContext) -> str:
@@ -152,7 +157,7 @@ def compute_ratio_text(spec: dict, ctx: EvaluationContext) -> str:
     except (ValueError, TypeError):
         return ""
     if den == 0 and num == 0:
-        return "1.0:1"
+        return "1:1"
 
     fmt = spec.get("format", {})
     # Determine direction - handle both kappa/lambda and cd4/cd8 naming
@@ -171,7 +176,7 @@ def compute_ratio_text(spec: dict, ctx: EvaluationContext) -> str:
         ratio = den / num if num > 0 else den
         template = fmt.get(gt_key, "1:{ratio}")
 
-    ratio_str = f"{ratio:.{precision}f}"
+    ratio_str = _fmt_number(ratio, precision)
     return template.replace("{ratio}", ratio_str)
 
 

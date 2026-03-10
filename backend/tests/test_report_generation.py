@@ -96,7 +96,8 @@ class TestInadequateReport:
         report = generator.generate(case)
         assert len(report.main_line) >= 1
         assert len(report.comment) >= 1
-        assert "viscous" in report.comment[0].lower()
+        assert report.comment[0] == "Comment:"
+        assert "viscous" in report.comment[1].lower()
 
     def test_inadequate_low_viability(self, generator):
         case = CaseInput(
