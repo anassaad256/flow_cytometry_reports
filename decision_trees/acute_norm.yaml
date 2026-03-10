@@ -94,6 +94,7 @@ constants:
     - M_CD56
     - M_CD4
     - M_CD20
+    - M_CD45
 
   marker_ids_with_cyto:
     - M_CD34
@@ -114,6 +115,7 @@ constants:
     - M_CD56
     - M_CD4
     - M_CD20
+    - M_CD45
     - M_TDT
     - M_MPO
     - M_CYTO_CD79A
@@ -138,6 +140,7 @@ constants:
     - M_CD56
     - M_CD4
     - M_CD20
+    - M_CD45
 
 marker_catalog:
   M_CD14:       { display: "CD14" }
