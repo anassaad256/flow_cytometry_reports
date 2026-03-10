@@ -8,6 +8,13 @@ from .context import EvaluationContext
 from .predicates import evaluate_predicate
 
 
+def _fmt_val(val) -> str:
+    """Convert a value to string, stripping trailing zeros from floats."""
+    if isinstance(val, float):
+        return f"{val:g}"
+    return str(val)
+
+
 def render_text(template_text: str, ctx: EvaluationContext,
                 helper_clauses: dict[str, dict] | None = None) -> str:
     """Render a template string by replacing {variable} placeholders with context values."""
@@ -30,8 +37,8 @@ def render_text(template_text: str, ctx: EvaluationContext,
         if val is None:
             return ""
         if isinstance(val, list):
-            return ", ".join(str(v) for v in val)
-        return str(val)
+            return ", ".join(_fmt_val(v) for v in val)
+        return _fmt_val(val)
 
     result = re.sub(r"\{(\w+)\}", replacer, template_text)
     # Clean up multi-space runs and normalize whitespace
