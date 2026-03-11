@@ -129,6 +129,12 @@ panel:
                 when: { default: true }
                 markers_ref: marker_ids_mds
 
+          default_marker_states:
+            - when: { default: true }
+              states:
+                STATE_POSITIVE: [M_CD34, M_CD117, M_CD13, M_CD33]
+                STATE_NEGATIVE: [M_CD7, M_CD19, M_CD14, M_CD64]
+
           inputs:
             required:
               - pct_gated_events
@@ -244,6 +250,12 @@ panel:
                 priority: 100
                 when: { default: true }
                 markers_ref: marker_ids_mds
+
+          default_marker_states:
+            - when: { default: true }
+              states:
+                STATE_POSITIVE: [M_CD13, M_CD14, M_CD33, M_CD64]
+                STATE_NEGATIVE: [M_CD19, M_CD34, M_CD117]
 
           inputs:
             required:

@@ -237,6 +237,19 @@ panel:
                   field_equals: { field: "cyto_tube_performed", value: CYTO_TUBE_YES }
                 markers_ref: marker_ids_with_cyto
 
+          default_marker_states:
+            - when:
+                field_equals: { field: "blast_type", value: BLAST_MYELOBLASTS }
+              states:
+                STATE_POSITIVE: [M_CD34, M_CD117, M_CD13, M_CD33, M_CD38, M_HLA_DR]
+                STATE_NEGATIVE: [M_CD4, M_CD5, M_CD7, M_CD10, M_CD14, M_CD19, M_CD20, M_CD22, M_CD56, M_CD64]
+
+            - when:
+                field_equals: { field: "blast_type", value: BLAST_B_LYMPHOBLASTS }
+              states:
+                STATE_POSITIVE: [M_CD10, M_CD19, M_CD22, M_CD38, M_HLA_DR, M_TDT, M_CYTO_CD79A]
+                STATE_NEGATIVE: [M_CD4, M_CD5, M_CD7, M_CD11C, M_CD13, M_CD14, M_CD33, M_CD36, M_CD56, M_CD64, M_CD117, M_MPO, M_CYTO_CD3]
+
           inputs:
             required:
               - blast_type
@@ -454,6 +467,12 @@ panel:
                 priority: 100
                 when: { default: true }
                 markers_ref: marker_ids_monocyte
+
+          default_marker_states:
+            - when: { default: true }
+              states:
+                STATE_POSITIVE: [M_CD4, M_CD11C, M_CD13, M_CD14, M_CD33, M_CD36, M_CD38, M_CD64, M_HLA_DR]
+                STATE_NEGATIVE: [M_CD5, M_CD10, M_CD19, M_CD22, M_CD34, M_CD56, M_CD117]
 
           inputs:
             required:
