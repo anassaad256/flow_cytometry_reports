@@ -66,6 +66,7 @@ class ReportGenerator:
                     "allow_multiple": pop_spec.get("allow_multiple", False),
                     "inputs": pop_spec.get("inputs", {}),
                     "active_markers_generation": pop_spec.get("active_markers_generation", {}),
+                    "default_marker_states": pop_spec.get("default_marker_states", []),
                 }
                 region_info["populations"].append(pop_info)
             result["regions"].append(region_info)

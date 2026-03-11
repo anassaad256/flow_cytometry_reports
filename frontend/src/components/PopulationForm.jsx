@@ -46,13 +46,37 @@ export default function PopulationForm({
     onChange({ ...population, marker_states: newStates })
   }
 
-  // Initialize marker states if empty
+  // Resolve default marker states from population spec
+  const defaults = React.useMemo(() => {
+    return resolveDefaultMarkerStates(populationSpec, population.fields)
+  }, [populationSpec, population.fields])
+
+  // Track blast_type to detect changes
+  const blastTypeRef = React.useRef(population.fields.blast_type)
+
+  // Initialize marker states with defaults when markers first appear
   React.useEffect(() => {
     if (activeMarkers.length > 0 && population.marker_states.length === 0) {
-      const initial = activeMarkers.map(m => ({ marker_id: m, state: 'STATE_NA' }))
+      const initial = activeMarkers.map(m => ({
+        marker_id: m,
+        state: defaults[m] || 'STATE_NA'
+      }))
       onChange({ ...population, marker_states: initial })
     }
   }, [activeMarkers.length])
+
+  // Re-apply defaults when blast_type changes
+  React.useEffect(() => {
+    const currentBlastType = population.fields.blast_type
+    if (currentBlastType && currentBlastType !== blastTypeRef.current && activeMarkers.length > 0) {
+      blastTypeRef.current = currentBlastType
+      const updated = activeMarkers.map(m => ({
+        marker_id: m,
+        state: defaults[m] || 'STATE_NA'
+      }))
+      onChange({ ...population, marker_states: updated })
+    }
+  }, [population.fields.blast_type, defaults, activeMarkers])
 
   // Determine which fields to show based on population type
   const requiredInputs = populationSpec?.inputs?.required || []
@@ -157,6 +181,23 @@ function matchesPredicate(pred, fields) {
     return pred.default
   }
   return false
+}
+
+function resolveDefaultMarkerStates(populationSpec, populationFields) {
+  const templates = populationSpec?.default_marker_states || []
+  for (const tmpl of templates) {
+    if (tmpl.when && matchesPredicate(tmpl.when, populationFields || {})) {
+      const result = {}
+      const states = tmpl.states || {}
+      for (const [state, markers] of Object.entries(states)) {
+        for (const m of markers) {
+          result[m] = state
+        }
+      }
+      return result
+    }
+  }
+  return {}
 }
 
 function renderField(field, value, updateField, panelEnums) {
