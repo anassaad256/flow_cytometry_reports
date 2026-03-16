@@ -120,7 +120,6 @@ panel:
 
           inputs:
             required:
-              - pct_gated_events
               - pc_outcome
             optional:
               - cd56_state
@@ -130,8 +129,9 @@ panel:
           derived:
             - id: pct_main
               type: percent_pick
-              preference_fields: ["pct_gated_events"]
+              preference_fields: ["region_pct_total"]
               precision_decimals_ref: shared_refs.percent_precision_decimals_ref
+              fixed_precision: true
 
             - id: kappa_lambda_ratio_text
               type: ratio_text
@@ -295,7 +295,6 @@ panel:
     - step: 1
       ask:
         - region_pct_total
-        - pct_gated_events
         - pc_outcome
 
     - step: 2

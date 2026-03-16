@@ -217,7 +217,7 @@ function renderField(field, value, updateField, panelEnums) {
     blast_type: 'Blast Type',
     pct_gated_events: '% of Gated Events',
     pct_all_viable: '% of All Viable',
-    pct_region: '% of Region',
+    pct_region: '% of Region (leave empty if 100%)',
     pc_outcome: 'Plasma Cell Outcome',
     cd56_state: 'CD56 State',
     kappa_percent: 'Kappa %',
