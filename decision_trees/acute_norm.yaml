@@ -213,7 +213,8 @@ panel:
     - region_id: REGION_BLASTS
 
       inputs:
-        required: []
+        required:
+          - region_pct_total
         optional: []
 
       region_comment_line_generation:
@@ -253,9 +254,9 @@ panel:
           inputs:
             required:
               - blast_type
-              - pct_gated_events
               - marker_states
-            optional: []
+            optional:
+              - pct_region
 
           derived:
             - id: positive_markers
@@ -281,6 +282,24 @@ panel:
 
           comment_line_generation:
             templates:
+              - id: CMT_BLAST_B_LYMPHOBLASTS_ZERO
+                priority: 400
+                when:
+                  all:
+                    - field_equals: { field: "blast_type", value: BLAST_B_LYMPHOBLASTS }
+                    - field_lt: { field: "pct_gated_events", value: 0.01 }
+                text: >
+                  The immunophenotypic analysis detects no CD10/CD19 and or CD34/TdT B lymphoblasts.
+
+              - id: CMT_BLAST_T_LYMPHOBLASTS_ZERO
+                priority: 390
+                when:
+                  all:
+                    - field_equals: { field: "blast_type", value: BLAST_T_LYMPHOBLASTS }
+                    - field_lt: { field: "pct_gated_events", value: 0.01 }
+                text: >
+                  The immunophenotypic analysis detects no CD3 T lymphoblasts.
+
               - id: CMT_BLAST_MYELOBLASTS_POS_NEG
                 priority: 300
                 when:
@@ -391,6 +410,32 @@ panel:
 
           main_line_item_generation:
             templates:
+              - id: ML_BLAST_B_LYMPHOBLASTS_ZERO
+                priority: 120
+                when:
+                  all:
+                    - field_equals: { field: "blast_type", value: BLAST_B_LYMPHOBLASTS }
+                    - field_lt: { field: "pct_gated_events", value: 0.01 }
+                item:
+                  text: "Immunophenotypic analysis detects no B lymphoblasts."
+                  finding_priority: 350
+                  finding_class: "BLAST_FINDING"
+                  panel_id: PANEL_ACUTE_LEUKEMIA
+                  population_id: POP_BLASTS
+
+              - id: ML_BLAST_T_LYMPHOBLASTS_ZERO
+                priority: 110
+                when:
+                  all:
+                    - field_equals: { field: "blast_type", value: BLAST_T_LYMPHOBLASTS }
+                    - field_lt: { field: "pct_gated_events", value: 0.01 }
+                item:
+                  text: "Immunophenotypic analysis detects no T lymphoblasts."
+                  finding_priority: 350
+                  finding_class: "BLAST_FINDING"
+                  panel_id: PANEL_ACUTE_LEUKEMIA
+                  population_id: POP_BLASTS
+
               - id: ML_BLAST_AML
                 priority: 100
                 when:
@@ -591,7 +636,7 @@ panel:
         context_region_equals: REGION_BLASTS
       ask:
         - blast_type
-        - pct_gated_events
+        - pct_region
 
     - step: 3
       when:

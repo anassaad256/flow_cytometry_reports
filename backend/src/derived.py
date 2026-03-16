@@ -126,11 +126,16 @@ def compute_percent_pick(spec: dict, ctx: EvaluationContext) -> str:
         if resolved is not None:
             precision = int(resolved)
 
+    fixed = spec.get("fixed_precision", False)
+
     for field in preference_fields:
         val = ctx.get(field)
         if val is not None:
             try:
-                return _fmt_number(float(val), precision)
+                fval = float(val)
+                if fixed:
+                    return f"{fval:.{precision}f}"
+                return _fmt_number(fval, precision)
             except (ValueError, TypeError):
                 continue
     return "0"

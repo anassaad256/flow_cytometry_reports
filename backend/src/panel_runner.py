@@ -160,6 +160,20 @@ class PanelRunner:
         }
         pop_scope.update(pop_fields)
         pop_scope["marker_states"] = marker_states
+
+        # Auto-compute pct_gated_events from region_pct_total and pct_region
+        region_pct = ctx.get("region_pct_total")
+        if region_pct is not None:
+            try:
+                rp = float(region_pct)
+                pct_region = pop_scope.get("pct_region")
+                if pct_region is not None and pct_region != "":
+                    pop_scope["pct_gated_events"] = round(rp * float(pct_region) / 100, 2)
+                elif "pct_gated_events" not in pop_scope or pop_scope.get("pct_gated_events") in (None, ""):
+                    pop_scope["pct_gated_events"] = rp
+            except (ValueError, TypeError):
+                pass
+
         ctx.push_scope(pop_scope)
 
         # Determine active markers
