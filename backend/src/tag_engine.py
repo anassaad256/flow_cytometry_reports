@@ -89,13 +89,18 @@ def _compute_auto_marker_tags(auto_spec: dict, ctx: EvaluationContext) -> set[st
 
 
 def evaluate_rules(rules: list[dict], ctx: EvaluationContext) -> set[str]:
-    """Evaluate rule-based tags for a population."""
+    """Evaluate rule-based tags for a population.
+
+    Tags are added to the context incrementally so later rules can
+    depend on tags set by earlier rules.
+    """
     new_tags: set[str] = set()
     for rule in rules:
         when = rule.get("when")
         if when and evaluate_predicate(when, ctx):
             set_tags = rule.get("set_tags", [])
             new_tags.update(set_tags)
+            ctx.add_tags(set(set_tags))
     return new_tags
 
 

@@ -47,6 +47,18 @@ def render_text(template_text: str, ctx: EvaluationContext,
     return result
 
 
+def _render_clause_text(text: str, ctx: EvaluationContext) -> str:
+    """Render clause text preserving intentional leading/trailing spaces."""
+    if not text:
+        return ""
+    # Render variable placeholders but preserve leading/trailing whitespace
+    rendered = render_text(text, ctx)
+    # Restore leading space if original text had one (stripped by render_text)
+    if text[0] == " " and rendered and rendered[0] != " ":
+        rendered = " " + rendered
+    return rendered
+
+
 def _resolve_helper_clause(clause_spec: dict, ctx: EvaluationContext) -> str:
     """Resolve a helper clause with conditional text."""
     when = clause_spec.get("when")
@@ -56,12 +68,12 @@ def _resolve_helper_clause(clause_spec: dict, ctx: EvaluationContext) -> str:
     fallback_text = clause_spec.get("fallback_text", "")
 
     if when and evaluate_predicate(when, ctx):
-        return render_text(text, ctx)
+        return _render_clause_text(text, ctx)
     if else_when and evaluate_predicate(else_when, ctx):
-        return render_text(else_text, ctx) if else_text else ""
+        return _render_clause_text(else_text, ctx) if else_text else ""
     if fallback_text is not None and not else_when:
-        return render_text(else_text, ctx) if else_text else ""
-    return render_text(fallback_text, ctx) if fallback_text else ""
+        return _render_clause_text(else_text, ctx) if else_text else ""
+    return _render_clause_text(fallback_text, ctx) if fallback_text else ""
 
 
 def render_output_lines(output_lines: list, ctx: EvaluationContext) -> list[str]:

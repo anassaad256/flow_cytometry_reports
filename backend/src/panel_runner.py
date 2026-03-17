@@ -50,12 +50,14 @@ class PanelRunner:
             rid = ri.get("region_id", "") if isinstance(ri, dict) else ri.region_id
             region_input_map[rid] = ri if isinstance(ri, dict) else ri.model_dump()
 
-        # Track region comments and population comments separately for ordering
+        # Track comments per region for paragraph assembly
         region_comments: dict[str, list[str]] = {}
-        population_comments: dict[str, list[list[str]]] = {}  # pop_type -> [instance_comments]
+        region_pop_comments: dict[str, dict[str, list[list[str]]]] = {}
+        region_order: list[str] = []
 
         for region_spec in regions_spec:
             region_id = region_spec.get("region_id", "")
+            region_order.append(region_id)
             region_input = region_input_map.get(region_id, {})
             region_fields = region_input.get("fields", {})
 
@@ -74,6 +76,7 @@ class PanelRunner:
                     if rendered:
                         region_cmt_lines.append(rendered)
             region_comments[region_id] = region_cmt_lines
+            region_pop_comments[region_id] = {}
 
             # Process populations
             populations_spec = region_spec.get("populations", [])
@@ -90,24 +93,24 @@ class PanelRunner:
             for pop_spec in populations_spec:
                 pop_id = pop_spec.get("population_id", "")
                 pop_instances = pop_input_groups.get(pop_id, [])
-
-                if pop_id not in population_comments:
-                    population_comments[pop_id] = []
+                region_pop_comments[region_id].setdefault(pop_id, [])
 
                 for instance_idx, pop_input in enumerate(pop_instances):
                     instance_comments, instance_main_items, instance_validations = (
                         self._process_population(pop_spec, pop_input, instance_idx)
                     )
-                    population_comments[pop_id].append(instance_comments)
+                    region_pop_comments[region_id][pop_id].append(instance_comments)
                     all_main_line_items.extend(instance_main_items)
                     all_validations.extend(instance_validations)
 
             ctx.pop_scope()  # region scope
 
-        # 3. Assemble comment lines in configured order
+        # 3. Assemble comment lines — one paragraph per region
         comment_order_spec = self.panel_section.get("comment_lines_generation", {})
         order = comment_order_spec.get("order", [])
-        all_comment_lines = self._assemble_comments(order, region_comments, population_comments)
+        all_comment_lines = self._assemble_comments(
+            order, region_comments, region_pop_comments, region_order
+        )
 
         # 4. Assemble main line items via panel-level generation
         main_line_gen = self.panel_section.get("main_line_items_generation", {})
@@ -260,20 +263,34 @@ class PanelRunner:
         self,
         order: list,
         region_comments: dict[str, list[str]],
-        population_comments: dict[str, list[list[str]]],
+        region_pop_comments: dict[str, dict[str, list[list[str]]]],
+        region_order: list[str],
     ) -> list[str]:
-        """Assemble comment lines in the configured order."""
-        result: list[str] = []
+        """Assemble comment lines — one paragraph per region.
+
+        All comment parts within the same region are joined into a single
+        string so they read as one paragraph in the report.
+        """
+        # Determine the population type ordering from the order config
+        pop_type_order: list[str] = []
         for entry in order:
-            if isinstance(entry, str):
-                if entry == "region_comment":
-                    for lines in region_comments.values():
-                        result.extend(lines)
-            elif isinstance(entry, dict):
+            if isinstance(entry, dict):
                 pop_type = entry.get("populations_of_type", "")
-                if pop_type and pop_type in population_comments:
-                    for instance_lines in population_comments[pop_type]:
-                        result.extend(instance_lines)
+                if pop_type:
+                    pop_type_order.append(pop_type)
+
+        result: list[str] = []
+        for region_id in region_order:
+            parts: list[str] = []
+            # Region comment first
+            parts.extend(region_comments.get(region_id, []))
+            # Then population comments in configured order
+            pop_comments = region_pop_comments.get(region_id, {})
+            for pop_type in pop_type_order:
+                for instance_lines in pop_comments.get(pop_type, []):
+                    parts.extend(instance_lines)
+            if parts:
+                result.append(" ".join(parts))
         return result
 
     def _assemble_main_line_items(
