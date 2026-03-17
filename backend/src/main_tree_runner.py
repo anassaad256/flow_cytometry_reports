@@ -100,6 +100,16 @@ class MainTreeRunner:
                 item.selection_order = idx
                 all_main_items.append(item)
 
+        # Suppress PANEL_NEGATIVE items when real findings exist from other panels
+        has_real_findings = any(
+            item.finding_class != "PANEL_NEGATIVE" for item in all_main_items
+        )
+        if has_real_findings:
+            all_main_items = [
+                item for item in all_main_items
+                if item.finding_class != "PANEL_NEGATIVE"
+            ]
+
         ordered_texts = sort_main_line_items(all_main_items)
 
         # Collect all comment lines
