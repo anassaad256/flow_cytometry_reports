@@ -1,4 +1,4 @@
-> **Last updated: 2026-03-18**
+> **Last updated: 2026-03-18 14:10 UTC**
 >
 > This document contains detailed logic, execution flows, and implementation specifics that reflect the codebase at the time of writing. As the system evolves, this reference must be updated to stay accurate. Compare the date above with the most recent commit to determine if this document needs refreshing. When making changes to the engine logic, DSL, panel rules, or architecture, update the relevant sections here and the date accordingly.
 
