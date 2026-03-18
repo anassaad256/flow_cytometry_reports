@@ -53,6 +53,14 @@ constants:
   percent_precision_decimals: 2
   ratio_precision_decimals: 1
 
+  positive_finding_classes:
+    - ACUTE_LEUKEMIA
+    - BLAST_FINDING
+    - B_CELL_CLONAL
+    - T_CELL_ABERRANT
+    - TLGL_ABERRANT
+    - PLASMA_CLONAL
+
   viability_caution_threshold_percent: 50
   mainline_terminal_text: "See comment"
   lab_disclaimer_text: "This test was developed and its performance and characteristics determined by flow cytometry facility at DRH, DMC University laboratory, using BD FACS Canto II. It has not been cleared or approved by the U.S. Food and Drug Administration (FDA). The FDA has determined that such clearance or approval is not necessary. This test is used for clinical purposes. It should not be regarded as investigational or for research. This laboratory is certified under the Clinical Laboratory Improvement Amendments of 1988 (CLIA-88) as qualified to perform high complexity clinical laboratory testing"
