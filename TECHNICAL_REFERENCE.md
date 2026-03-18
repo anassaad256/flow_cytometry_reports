@@ -1,4 +1,4 @@
-> **Last updated: 2026-03-18 14:10 UTC**
+> **Last updated: 2026-03-18 15:45 UTC**
 >
 > This document contains detailed logic, execution flows, and implementation specifics that reflect the codebase at the time of writing. As the system evolves, this reference must be updated to stay accurate. Compare the date above with the most recent commit to determine if this document needs refreshing. When making changes to the engine logic, DSL, panel rules, or architecture, update the relevant sections here and the date accordingly.
 
@@ -447,7 +447,19 @@ Comments are assembled as **one paragraph per region**. All comment parts within
 Each `MainLineItem` has:
 - `text` — The display text
 - `finding_priority` — Lower = higher priority (100 = acute leukemia, 350 = blast finding, 750 = panel negative)
-- `finding_class` — Category (e.g., `"ACUTE_LEUKEMIA"`, `"BLAST_FINDING"`, `"PANEL_NEGATIVE"`)
+- `finding_class` — Category. All known classes and their suppression behavior:
+
+  | Finding Class | Panel | Suppresses PANEL_NEGATIVE? |
+  |---|---|---|
+  | `ACUTE_LEUKEMIA` | Acute Leukemia, MDS | Yes |
+  | `BLAST_FINDING` | Acute Leukemia, MDS | Yes |
+  | `B_CELL_CLONAL` | Lymphoproliferative | Yes |
+  | `T_CELL_ABERRANT` | Lymphoproliferative | Yes |
+  | `TLGL_ABERRANT` | Lymphoproliferative | Yes |
+  | `PLASMA_CLONAL` | Plasma Cell | Yes |
+  | `PLASMA_POLYCLONAL` | Plasma Cell | No |
+  | `PLASMA_INSUFFICIENT` | Plasma Cell | No |
+  | `PANEL_NEGATIVE` | Any (fallback) | No |
 - `panel_id` / `population_id` — Source tracking
 - `selection_order` — Panel selection order (for stable sorting)
 
@@ -455,15 +467,26 @@ Each `MainLineItem` has:
 Items are sorted by `(finding_priority ascending, selection_order ascending)`. This ensures acute leukemia findings appear before blast findings, which appear before panel negatives.
 
 ### PANEL_NEGATIVE Suppression
-When multiple panels are selected and some produce real findings while others produce "No significant immunophenotypic abnormalities", the negatives are suppressed:
+When multiple panels are selected and some produce clinically significant positive findings while others produce "No significant immunophenotypic abnormalities", the negatives are suppressed. Suppression is controlled by the `positive_finding_classes` constant in `Main-tree.txt`:
+
+```yaml
+positive_finding_classes:
+  - ACUTE_LEUKEMIA
+  - BLAST_FINDING
+  - B_CELL_CLONAL
+  - T_CELL_ABERRANT
+  - TLGL_ABERRANT
+  - PLASMA_CLONAL
+```
 
 ```python
-has_real_findings = any(item.finding_class != "PANEL_NEGATIVE" for item in all_main_items)
-if has_real_findings:
+positive_classes = set(self.spec.get("constants", {}).get("positive_finding_classes", []))
+has_positive_findings = any(item.finding_class in positive_classes for item in all_main_items)
+if has_positive_findings:
     all_main_items = [item for item in all_main_items if item.finding_class != "PANEL_NEGATIVE"]
 ```
 
-This prevents showing "no significant immunophenotype" alongside a lymphoma finding from another panel.
+Only truly positive/abnormal findings trigger suppression. Non-positive classes like `PLASMA_INSUFFICIENT`, `PLASMA_POLYCLONAL`, etc. do **not** suppress PANEL_NEGATIVE items. This ensures that, for example, a plasma-insufficient result alongside a lympro-negative result will show both mainline items rather than silently dropping the lympro negative.
 
 ---
 
