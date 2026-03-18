@@ -1,3 +1,7 @@
+> **Last updated: 2026-03-18**
+>
+> This document contains detailed logic, execution flows, and implementation specifics that reflect the codebase at the time of writing. As the system evolves, this reference must be updated to stay accurate. Compare the date above with the most recent commit to determine if this document needs refreshing. When making changes to the engine logic, DSL, panel rules, or architecture, update the relevant sections here and the date accordingly.
+
 # Flow Cytometry Report Generator — Technical Reference
 
 This document is the authoritative technical reference for the flow cytometry clinical report generation system. It is intended for developers (including AI assistants) who need to understand, modify, or extend the system.

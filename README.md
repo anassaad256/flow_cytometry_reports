@@ -1,3 +1,7 @@
+> **Last updated: 2026-03-18**
+>
+> This document describes the project structure, architecture, and usage. It may fall out of date as the codebase evolves. Compare the date above with the most recent commit to determine if this document needs refreshing. When making significant changes to the project, update this file and the date accordingly.
+
 # Flow Cytometry Clinical Report Generator
 
 A deterministic clinical report generation system for flow cytometry analysis. Clinicians input structured case data through a step-by-step wizard, and the system produces standardized pathology consultation reports using a YAML-driven decision tree engine.
