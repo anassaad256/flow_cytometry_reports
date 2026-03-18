@@ -814,7 +814,7 @@ panel:
                 when:
                   tag_present: TAG_T_NORMAL
                 text: >
-                  About {pct_comment}% of the remaining lymphocytes are normal T cells positive for
+                  About {pct_comment}% of the lymphocytes are normal T cells positive for
                   {positive_markers}{neg_clause}{ratio_clause}.
 
           main_line_item_generation:

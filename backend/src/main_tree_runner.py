@@ -100,11 +100,15 @@ class MainTreeRunner:
                 item.selection_order = idx
                 all_main_items.append(item)
 
-        # Suppress PANEL_NEGATIVE items when real findings exist from other panels
-        has_real_findings = any(
-            item.finding_class != "PANEL_NEGATIVE" for item in all_main_items
+        # Suppress PANEL_NEGATIVE items only when clinically significant
+        # positive findings exist (not just any non-negative finding)
+        positive_classes = set(
+            self.spec.get("constants", {}).get("positive_finding_classes", [])
         )
-        if has_real_findings:
+        has_positive_findings = any(
+            item.finding_class in positive_classes for item in all_main_items
+        )
+        if has_positive_findings:
             all_main_items = [
                 item for item in all_main_items
                 if item.finding_class != "PANEL_NEGATIVE"
