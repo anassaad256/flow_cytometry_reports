@@ -1,4 +1,4 @@
-> **Last updated: 2026-03-18**
+> **Last updated: 2026-03-18 14:10 UTC**
 >
 > This document describes the project structure, architecture, and usage. It may fall out of date as the codebase evolves. Compare the date above with the most recent commit to determine if this document needs refreshing. When making significant changes to the project, update this file and the date accordingly.
 
