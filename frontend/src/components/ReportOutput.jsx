@@ -16,9 +16,9 @@ export default function ReportOutput({ report, onNewCase }) {
         </button>
       </div>
 
-      <ReportSection title="General" lines={general} />
       <ReportSection title="Main Line" lines={main_line} />
       <ReportSection title="Comment" lines={comment} />
+      <ReportSection title="General" lines={general} />
 
       {validation_errors && validation_errors.length > 0 && (
         <div className="report-section">
