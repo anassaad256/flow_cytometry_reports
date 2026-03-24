@@ -2,11 +2,9 @@ import React, { useState } from 'react'
 
 const PRESET_SPECIMENS = ['Bone marrow', 'Blood', 'Lymph node']
 
-export default function CaseInfoStep({ state, updateField, onNext }) {
+export default function CaseInfoStep({ state, updateField }) {
   const isPreset = PRESET_SPECIMENS.includes(state.specimen_type)
   const [otherMode, setOtherMode] = useState(!isPreset && state.specimen_type !== '')
-
-  const canProceed = state.specimen_type.trim() !== ''
 
   const handleChoice = (choice) => {
     if (choice === 'Other') {
@@ -57,17 +55,12 @@ export default function CaseInfoStep({ state, updateField, onNext }) {
         )}
       </div>
       <div className="form-group">
-        <label>Clinical Data <span style={{ fontWeight: 400, color: '#999' }}>(optional)</span></label>
+        <label>Clinical Data <span style={{ fontWeight: 400, color: 'var(--on-surface-variant)' }}>(optional)</span></label>
         <textarea
           value={state.clinical_data}
           onChange={e => updateField('clinical_data', e.target.value)}
           placeholder="e.g., AML, status post chemotherapy"
         />
-      </div>
-      <div className="btn-row">
-        <button className="btn btn-primary" onClick={onNext} disabled={!canProceed}>
-          Next
-        </button>
       </div>
     </div>
   )

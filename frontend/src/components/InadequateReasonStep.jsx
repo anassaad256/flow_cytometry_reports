@@ -6,7 +6,7 @@ const REASONS = [
   { value: 'INADEQUATE_LOW_VIABILITY', label: 'Low viability' },
 ]
 
-export default function InadequateReasonStep({ state, updateField, onGenerate, onBack, loading }) {
+export default function InadequateReasonStep({ state, updateField, onGenerate, loading }) {
   const showViability = state.inadequate_reason === 'INADEQUATE_LOW_VIABILITY'
   const canGenerate = state.inadequate_reason && (!showViability || state.viability_percent)
 
@@ -17,19 +17,13 @@ export default function InadequateReasonStep({ state, updateField, onGenerate, o
         <label>Select the reason for inadequacy</label>
         <div className="radio-group">
           {REASONS.map(r => (
-            <label
+            <div
               key={r.value}
               className={`radio-option ${state.inadequate_reason === r.value ? 'selected' : ''}`}
+              onClick={() => updateField('inadequate_reason', r.value)}
             >
-              <input
-                type="radio"
-                name="reason"
-                value={r.value}
-                checked={state.inadequate_reason === r.value}
-                onChange={() => updateField('inadequate_reason', r.value)}
-              />
               {r.label}
-            </label>
+            </div>
           ))}
         </div>
       </div>
@@ -49,10 +43,9 @@ export default function InadequateReasonStep({ state, updateField, onGenerate, o
         </div>
       )}
 
-      <div className="btn-row">
-        <button className="btn btn-secondary" onClick={onBack}>Back</button>
+      <div className="btn-row" style={{ justifyContent: 'flex-end' }}>
         <button
-          className="btn btn-success"
+          className="btn btn-primary"
           onClick={onGenerate}
           disabled={!canGenerate || loading}
         >

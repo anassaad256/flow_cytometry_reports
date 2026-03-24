@@ -1,8 +1,6 @@
 import React from 'react'
 
-export default function AdequateSetupStep({ state, updateField, togglePanel, panels, onNext, onBack }) {
-  const canProceed = state.viability_percent && state.selected_panel_ids.length > 0
-
+export default function AdequateSetupStep({ state, updateField, togglePanel, panels }) {
   return (
     <div className="card">
       <h2>Adequate Case Setup</h2>
@@ -33,13 +31,6 @@ export default function AdequateSetupStep({ state, updateField, togglePanel, pan
             </div>
           ))}
         </div>
-      </div>
-
-      <div className="btn-row">
-        <button className="btn btn-secondary" onClick={onBack}>Back</button>
-        <button className="btn btn-primary" onClick={onNext} disabled={!canProceed}>
-          Next
-        </button>
       </div>
     </div>
   )

@@ -16,7 +16,7 @@ const REGION_LABELS = {
   REGION_LYMPHOCYTES: 'Lymphocytes',
 }
 
-export default function PanelWizard({ state, setPanelData, onGenerate, onBack, loading }) {
+export default function PanelWizard({ state, setPanelData, onGenerate, loading }) {
   const [schemas, setSchemas] = useState({})
   const [activePanelIdx, setActivePanelIdx] = useState(0)
   const [loadingSchemas, setLoadingSchemas] = useState(true)
@@ -68,9 +68,7 @@ export default function PanelWizard({ state, setPanelData, onGenerate, onBack, l
   }
 
   const handlePanelBack = () => {
-    if (isFirstPanel) {
-      onBack()
-    } else {
+    if (!isFirstPanel) {
       setActivePanelIdx(i => i - 1)
     }
   }
@@ -110,10 +108,12 @@ export default function PanelWizard({ state, setPanelData, onGenerate, onBack, l
           onChange={updatePanelData}
         />
 
-        <div className="btn-row">
-          <button className="btn btn-secondary" onClick={handlePanelBack}>
-            Back
-          </button>
+        <div className="btn-row" style={{ justifyContent: 'flex-end' }}>
+          {!isFirstPanel && (
+            <button className="btn btn-secondary" onClick={handlePanelBack}>
+              Previous Panel
+            </button>
+          )}
           <button
             className="btn btn-primary"
             onClick={handlePanelNext}
@@ -350,7 +350,7 @@ function RegionsEditor({ schema, panelData, onChange }) {
             })}
 
             {regionData.populations.length === 0 && (
-              <p style={{ color: '#636e72', fontSize: '0.9rem', fontStyle: 'italic' }}>
+              <p style={{ color: 'var(--on-surface-variant)', fontSize: '14px', fontStyle: 'italic' }}>
                 No populations added yet. Click a button above to add one.
               </p>
             )}
