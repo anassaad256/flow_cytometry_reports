@@ -5,7 +5,7 @@ const OPTIONS = [
   { value: 'ADEQUACY_INADEQUATE', label: 'Inadequate' },
 ]
 
-export default function AdequacyStep({ state, updateField, onNext, onBack }) {
+export default function AdequacyStep({ state, updateField }) {
   return (
     <div className="card">
       <h2>Specimen Adequacy</h2>
@@ -13,27 +13,15 @@ export default function AdequacyStep({ state, updateField, onNext, onBack }) {
         <label>Is the specimen adequate for flow cytometry?</label>
         <div className="radio-group">
           {OPTIONS.map(opt => (
-            <label
+            <div
               key={opt.value}
               className={`radio-option ${state.adequacy_status === opt.value ? 'selected' : ''}`}
+              onClick={() => updateField('adequacy_status', opt.value)}
             >
-              <input
-                type="radio"
-                name="adequacy"
-                value={opt.value}
-                checked={state.adequacy_status === opt.value}
-                onChange={() => updateField('adequacy_status', opt.value)}
-              />
               {opt.label}
-            </label>
+            </div>
           ))}
         </div>
-      </div>
-      <div className="btn-row">
-        <button className="btn btn-secondary" onClick={onBack}>Back</button>
-        <button className="btn btn-primary" onClick={onNext} disabled={!state.adequacy_status}>
-          Next
-        </button>
       </div>
     </div>
   )

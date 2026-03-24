@@ -1,4 +1,4 @@
-> **Last updated: 2026-03-18 15:45 UTC**
+> **Last updated: 2026-03-24 18:30 UTC**
 >
 > This document contains detailed logic, execution flows, and implementation specifics that reflect the codebase at the time of writing. As the system evolves, this reference must be updated to stay accurate. Compare the date above with the most recent commit to determine if this document needs refreshing. When making changes to the engine logic, DSL, panel rules, or architecture, update the relevant sections here and the date accordingly.
 
@@ -532,18 +532,32 @@ Only truly positive/abnormal findings trigger suppression. Non-positive classes 
 
 ## 14. Frontend Architecture
 
-### Wizard Flow
+### Progressive Single-Page Layout
+
+The frontend uses a progressive disclosure pattern — all sections live on a single scrollable page. Sections appear as the user fills in preceding fields:
 
 ```
-CaseInfoStep → AdequacyStep → Details → PanelWizard → ReportOutput
-                                  │
-              Inadequate ─────────┤─── InadequateReasonStep → generate
-              Adequate ───────────┘─── AdequateSetupStep → PanelWizard → generate
+CaseInfoStep           — always visible
+  └─ AdequacyStep      — appears after specimen type selected
+      ├─ Inadequate → InadequateReasonStep → Generate button → ReportOutput
+      └─ Adequate → AdequateSetupStep (viability + panels)
+                    └─ PanelWizard → Generate button → ReportOutput
 ```
+
+The report scrolls into view after generation. A "New Case" button resets and scrolls to top.
+
+### Design System
+
+The UI uses an M3 (Material Design 3) inspired design system with CSS custom properties:
+- **Fonts**: Inter (body), Manrope (headings) via Google Fonts
+- **Colors**: Primary `#006398`, surface scale from `#f7f9fb` to `#ffffff`
+- **Cards**: `border-radius: 16px`, surface-low background, no drop shadows
+- **Buttons**: Rounded (`12px`), primary filled, secondary outlined, dashed for add actions
+- **Header**: Fixed, frosted-glass backdrop blur
 
 ### Key Components
 
-- **`App.jsx`** — Main wizard state machine, step navigation, report generation
+- **`App.jsx`** — Progressive layout orchestration, report generation
 - **`useCaseState.js`** — Hook managing all case state with localStorage persistence
 - **`PanelWizard.jsx`** — Iterates selected panels, loads schemas dynamically via `/api/panel/{id}/schema`
   - Contains `RegionsEditor` for managing regions and populations within panels
