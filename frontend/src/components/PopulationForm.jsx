@@ -158,13 +158,19 @@ function isFieldVisible(field, popId, fields) {
     }
   }
 
-  // B cell conditional fields
+  // B cell conditional fields — only apply when b_outcome has been selected
   if (popId === 'POP_B_CELLS') {
     const bOutcome = fields.b_outcome
+    if (!bOutcome) {
+      // Before outcome is selected, only show b_outcome itself
+      // and the pct fields (needed for all non-NONE outcomes)
+      if (field === 'restricted_chain' || field === 'fsc_size' || field === 'kappa_percent' || field === 'lambda_percent') return false
+      return true
+    }
     if (field === 'restricted_chain') return bOutcome === 'B_MONOCLONAL'
     if (field === 'fsc_size') return bOutcome === 'B_MONOCLONAL'
     if (field === 'kappa_percent' || field === 'lambda_percent') return bOutcome === 'B_POLYCLONAL'
-    if (field === 'pct_gated_events' || field === 'pct_region') return bOutcome && bOutcome !== 'B_NONE'
+    if (field === 'pct_gated_events' || field === 'pct_region') return bOutcome !== 'B_NONE'
   }
 
   return true
