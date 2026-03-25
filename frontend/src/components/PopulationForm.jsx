@@ -105,7 +105,20 @@ export default function PopulationForm({
       </div>
 
       {/* Render fields with pct pairing */}
-      {renderFieldList(orderedFields, population.fields, updateField, panelEnums)}
+      {orderedFields.map(field => {
+        // Skip pct_region if it will be paired with pct_gated_events
+        if (field === 'pct_region' && orderedFields.includes('pct_gated_events')) return null
+        // Pair pct_gated_events with pct_region side by side
+        if (field === 'pct_gated_events' && orderedFields.includes('pct_region')) {
+          return (
+            <div key="pct-row" className="form-row">
+              {renderField('pct_gated_events', population.fields.pct_gated_events, updateField, panelEnums)}
+              {renderField('pct_region', population.fields.pct_region, updateField, panelEnums)}
+            </div>
+          )
+        }
+        return renderField(field, population.fields[field], updateField, panelEnums)
+      })}
 
       {/* Marker state grid */}
       {showMarkers && (
@@ -177,30 +190,6 @@ function orderFields(fields, popId) {
   })
 }
 
-// Render the field list, pairing pct_gated_events + pct_region side by side
-function renderFieldList(fields, populationFields, updateField, panelEnums) {
-  const result = []
-  const rendered = new Set()
-
-  for (const field of fields) {
-    if (rendered.has(field)) continue
-    rendered.add(field)
-
-    if (field === 'pct_gated_events' && fields.includes('pct_region') && !rendered.has('pct_region')) {
-      rendered.add('pct_region')
-      result.push(
-        <div key="pct-row" className="form-row">
-          {renderField('pct_gated_events', populationFields.pct_gated_events, updateField, panelEnums)}
-          {renderField('pct_region', populationFields.pct_region, updateField, panelEnums)}
-        </div>
-      )
-    } else {
-      result.push(renderField(field, populationFields[field], updateField, panelEnums))
-    }
-  }
-
-  return result
-}
 
 function getPopulationLabel(popId) {
   const labels = {
@@ -341,6 +330,25 @@ function renderField(field, value, updateField, panelEnums) {
 
   if (enumMap[field] && panelEnums[enumMap[field]]) {
     const options = panelEnums[enumMap[field]]
+    // Use radio-style buttons for short enum lists, select for longer ones
+    if (options.length <= 5) {
+      return (
+        <div className="form-group" key={field}>
+          <label>{label}</label>
+          <div className="radio-group">
+            {options.map(opt => (
+              <div
+                key={opt}
+                className={`radio-option ${value === opt ? 'selected' : ''}`}
+                onClick={() => updateField(field, opt)}
+              >
+                {formatEnumLabel(opt)}
+              </div>
+            ))}
+          </div>
+        </div>
+      )
+    }
     return (
       <div className="form-group" key={field}>
         <label>{label}</label>
