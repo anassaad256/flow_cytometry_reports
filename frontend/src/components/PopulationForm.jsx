@@ -21,6 +21,14 @@ export default function PopulationForm({
   const updateField = (field, value) => {
     const newFields = { ...population.fields, [field]: value }
 
+    // When b_outcome changes, reset dependent fields to avoid stale data
+    if (field === 'b_outcome' && popId === 'POP_B_CELLS') {
+      delete newFields.restricted_chain
+      delete newFields.fsc_size
+      delete newFields.kappa_percent
+      delete newFields.lambda_percent
+    }
+
     // Auto-calculate between pct_gated_events and pct_region using region_pct_total
     // Only auto-calc when value is a finalized number (not a string being typed)
     if (typeof value === 'number') {
@@ -83,15 +91,15 @@ export default function PopulationForm({
   const optionalInputs = populationSpec?.inputs?.optional || []
 
   // Build visible field list with conditional filtering
-  const visibleFields = [...requiredInputs, ...optionalInputs]
-    .filter(f => f !== 'marker_states')
-    .filter(f => isFieldVisible(f, popId, population.fields))
+  const allFields = [...requiredInputs, ...optionalInputs].filter(f => f !== 'marker_states')
+  const visibleFields = allFields
+    .filter(f => isFieldVisible(f, popId, population.fields, allFields))
 
   // Sort fields so pct_gated_events and pct_region are adjacent
   const orderedFields = orderFields(visibleFields, popId)
 
   // Should we show the marker grid?
-  const showMarkers = activeMarkers.length > 0 && shouldShowMarkers(popId, population.fields)
+  const showMarkers = activeMarkers.length > 0 && shouldShowMarkers(popId, population.fields, allFields)
 
   return (
     <div className="population-entry">
@@ -137,8 +145,8 @@ export default function PopulationForm({
 }
 
 // Determine if the marker grid should be shown
-function shouldShowMarkers(popId, fields) {
-  if (popId === 'POP_B_CELLS') {
+function shouldShowMarkers(popId, fields, availableFields) {
+  if (popId === 'POP_B_CELLS' && availableFields.includes('b_outcome')) {
     const outcome = fields.b_outcome
     return outcome === 'B_MONOCLONAL' || outcome === 'B_POLYCLONAL'
   }
@@ -146,7 +154,7 @@ function shouldShowMarkers(popId, fields) {
 }
 
 // Determine if a field should be visible based on population state
-function isFieldVisible(field, popId, fields) {
+function isFieldVisible(field, popId, fields, availableFields) {
   // Plasma cell conditional fields
   if (popId === 'POP_PLASMA_CELLS') {
     if (field === 'kappa_percent' || field === 'lambda_percent') {
@@ -158,12 +166,11 @@ function isFieldVisible(field, popId, fields) {
     }
   }
 
-  // B cell conditional fields — only apply when b_outcome has been selected
-  if (popId === 'POP_B_CELLS') {
+  // B cell conditional fields — only apply when b_outcome is in the schema
+  if (popId === 'POP_B_CELLS' && availableFields.includes('b_outcome')) {
     const bOutcome = fields.b_outcome
     if (!bOutcome) {
-      // Before outcome is selected, only show b_outcome itself
-      // and the pct fields (needed for all non-NONE outcomes)
+      // Before outcome is selected, only show b_outcome and pct fields
       if (field === 'restricted_chain' || field === 'fsc_size' || field === 'kappa_percent' || field === 'lambda_percent') return false
       return true
     }
