@@ -1,4 +1,4 @@
-> **Last updated: 2026-03-24 19:00 UTC**
+> **Last updated: 2026-03-25 UTC**
 >
 > This document contains detailed logic, execution flows, and implementation specifics that reflect the codebase at the time of writing. As the system evolves, this reference must be updated to stay accurate. Compare the date above with the most recent commit to determine if this document needs refreshing. When making changes to the engine logic, DSL, panel rules, or architecture, update the relevant sections here and the date accordingly.
 
@@ -500,26 +500,33 @@ Only truly positive/abnormal findings trigger suppression. Non-positive classes 
 - **Auto-compute**: `pct_gated_events = region_pct_total × pct_region / 100`. If `pct_region` is empty, `pct_gated_events = region_pct_total` (assumes 100% of region).
 - **0% templates**: Special comment/mainline templates for B/T lymphoblasts when `pct_gated_events < 0.01`
 - **AML threshold**: Myeloblasts ≥ 20% → "Acute myeloid leukemia" (priority 100); < 20% → "detects around X% myeloblasts" (priority 350)
-- **Default marker states**: Myeloblasts and B Lymphoblasts have predefined defaults
+- **Default marker states**: All three blast types have predefined defaults:
+  - **Myeloblasts**: CD34/CD117/CD13/CD33/CD38/HLA-DR/MPO positive; TdT/cCD79a/cCD3 negative (cyto markers included)
+  - **B Lymphoblasts**: CD10/CD19/CD22/CD38/HLA-DR/TdT/cCD79a positive; myeloid and T markers negative
+  - **T Lymphoblasts**: CD5/CD7/CD10/CD22/CD38/HLA-DR/TdT/cCD3 positive; CD19/CD20/cCD79a/MPO/myeloid markers negative
 - **Monocyte defaults**: Common monocyte immunophenotype pre-selected
 
 ### Lymphoproliferative / T-NK (`lympro_tnk_norm.yaml`)
 
 - **Single region**: REGION_LYMPHOCYTES with `region_pct_total`
 - **Populations**: POP_B_CELLS, POP_T_CELLS, POP_TLGL
-- **B cells**: Complex tag system for kappa/lambda restriction, FSC cell size
-  - Auto-tags from markers: `TAG_KAPPA_EXPRESSED`, `TAG_LAMBDA_NEGATIVE`, etc.
-  - Rules: restriction detection → `KAPPA_RESTRICTED` or `LAMBDA_RESTRICTED` → `B_CELL_RESTRICTED`
-  - FSC rules: `FSC_SMALL_INTERMEDIATE` tag → dependent rule for FSC text inclusion
-  - Helper clauses for restriction text, negative markers, FSC description
-- **T cells**: CD4/CD8 status, aberrancy detection, kappa/lambda ratio if applicable
+- **B cells**: User-driven outcome selection (no auto-inference from marker states)
+  - **`b_outcome` enum**: Monoclonal / Polyclonal / Insufficient / None
+  - **Monoclonal flow**: User selects kappa or lambda (`restricted_chain`), then FSC size, then marker states
+  - **Polyclonal flow**: User inputs kappa % and lambda %, then marker states
+  - **Insufficient / None**: No further input required; pre-defined comment templates used
+  - Kappa/lambda removed from B cell marker grid (outcome-driven, not marker-inferred)
+  - CLL pattern detection: still checks CD5+/CD23+ on top of restriction tags
+  - FSC rules: only evaluated for monoclonal outcomes
+- **T cells**: CD4/CD8 status, aberrancy detection, normality/abnormality user-selected
+- **UI layout**: % of gated events and % of region displayed side-by-side on one line
 - **Add-on markers**: Hairy cell markers and T/NK markers are conditionally included
 
 ### Plasma Cell Myeloma (`plasma_norm.yaml`)
 
 - **Outcome-driven**: User selects `pc_outcome` (Insufficient / Polyclonal / Kappa Restricted / Lambda Restricted)
 - **Fixed precision**: Main line percentages use `fixed_precision: true` (always 2 decimal places)
-- **CD56 aberrancy**: Detected and included in comment text
+- **CD56 aberrancy**: Asked only after a plasma cell outcome is selected; hidden for insufficient outcome
 - **Region-level % used**: `region_pct_total` for the percentage display
 
 ### MDS (`mds_norm.yaml`)
@@ -527,6 +534,7 @@ Only truly positive/abnormal findings trigger suppression. Non-positive classes 
 - **Simplified acute leukemia**: Only myeloblast logic, no cyto tube
 - **Smaller marker set**: 9 markers (CD34, CD117, CD33, CD13, CD7, CD19, CD14, CD64, CD45)
 - **Same structure**: Blasts and Monocytes regions with default marker states
+- **Blast region %**: Optional `region_pct_total` at REGION_BLASTS level and `pct_region` at population level, with auto-calculation between the two (same as acute leukemia)
 
 ---
 

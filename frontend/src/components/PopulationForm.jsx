@@ -82,6 +82,17 @@ export default function PopulationForm({
   const requiredInputs = populationSpec?.inputs?.required || []
   const optionalInputs = populationSpec?.inputs?.optional || []
 
+  // Build visible field list with conditional filtering
+  const visibleFields = [...requiredInputs, ...optionalInputs]
+    .filter(f => f !== 'marker_states')
+    .filter(f => isFieldVisible(f, popId, population.fields))
+
+  // Sort fields so pct_gated_events and pct_region are adjacent
+  const orderedFields = orderFields(visibleFields, popId)
+
+  // Should we show the marker grid?
+  const showMarkers = activeMarkers.length > 0 && shouldShowMarkers(popId, population.fields)
+
   return (
     <div className="population-entry">
       <div className="population-entry-header">
@@ -93,20 +104,11 @@ export default function PopulationForm({
         )}
       </div>
 
-      {/* Render required/optional fields */}
-      {[...requiredInputs, ...optionalInputs]
-        .filter(f => f !== 'marker_states')
-        .filter(f => {
-          // Hide kappa_percent/lambda_percent for plasma cells unless polyclonal
-          if ((f === 'kappa_percent' || f === 'lambda_percent') && popId === 'POP_PLASMA_CELLS') {
-            return population.fields.pc_outcome === 'PC_POLYCLONAL'
-          }
-          return true
-        })
-        .map(field => renderField(field, population.fields[field], updateField, panelEnums))}
+      {/* Render fields with pct pairing */}
+      {renderFieldList(orderedFields, population.fields, updateField, panelEnums)}
 
       {/* Marker state grid */}
-      {activeMarkers.length > 0 && (
+      {showMarkers && (
         <div className="form-group">
           <label>Marker States</label>
           <MarkerStateGrid
@@ -119,6 +121,85 @@ export default function PopulationForm({
       )}
     </div>
   )
+}
+
+// Determine if the marker grid should be shown
+function shouldShowMarkers(popId, fields) {
+  if (popId === 'POP_B_CELLS') {
+    const outcome = fields.b_outcome
+    return outcome === 'B_MONOCLONAL' || outcome === 'B_POLYCLONAL'
+  }
+  return true
+}
+
+// Determine if a field should be visible based on population state
+function isFieldVisible(field, popId, fields) {
+  // Plasma cell conditional fields
+  if (popId === 'POP_PLASMA_CELLS') {
+    if (field === 'kappa_percent' || field === 'lambda_percent') {
+      return fields.pc_outcome === 'PC_POLYCLONAL'
+    }
+    if (field === 'cd56_state') {
+      const outcome = fields.pc_outcome
+      return outcome && outcome !== 'PC_INSUFFICIENT'
+    }
+  }
+
+  // B cell conditional fields
+  if (popId === 'POP_B_CELLS') {
+    const bOutcome = fields.b_outcome
+    if (field === 'restricted_chain') return bOutcome === 'B_MONOCLONAL'
+    if (field === 'fsc_size') return bOutcome === 'B_MONOCLONAL'
+    if (field === 'kappa_percent' || field === 'lambda_percent') return bOutcome === 'B_POLYCLONAL'
+    if (field === 'pct_gated_events' || field === 'pct_region') return bOutcome && bOutcome !== 'B_NONE'
+  }
+
+  return true
+}
+
+// Reorder fields so pct_gated_events and pct_region are adjacent, and
+// key decision fields come first
+function orderFields(fields, popId) {
+  const preferredOrder = {
+    POP_B_CELLS: ['b_outcome', 'pct_gated_events', 'pct_region', 'restricted_chain', 'fsc_size', 'kappa_percent', 'lambda_percent'],
+    POP_T_CELLS: ['pct_gated_events', 'pct_region', 't_normality', 'cd4_percent', 'cd8_percent'],
+    POP_TLGL: ['pct_gated_events', 'pct_region', 't_normality'],
+  }
+  const order = preferredOrder[popId]
+  if (!order) return fields
+  return [...fields].sort((a, b) => {
+    const ai = order.indexOf(a)
+    const bi = order.indexOf(b)
+    if (ai === -1 && bi === -1) return 0
+    if (ai === -1) return 1
+    if (bi === -1) return -1
+    return ai - bi
+  })
+}
+
+// Render the field list, pairing pct_gated_events + pct_region side by side
+function renderFieldList(fields, populationFields, updateField, panelEnums) {
+  const result = []
+  const rendered = new Set()
+
+  for (const field of fields) {
+    if (rendered.has(field)) continue
+    rendered.add(field)
+
+    if (field === 'pct_gated_events' && fields.includes('pct_region') && !rendered.has('pct_region')) {
+      rendered.add('pct_region')
+      result.push(
+        <div key="pct-row" className="form-row">
+          {renderField('pct_gated_events', populationFields.pct_gated_events, updateField, panelEnums)}
+          {renderField('pct_region', populationFields.pct_region, updateField, panelEnums)}
+        </div>
+      )
+    } else {
+      result.push(renderField(field, populationFields[field], updateField, panelEnums))
+    }
+  }
+
+  return result
 }
 
 function getPopulationLabel(popId) {
@@ -208,6 +289,8 @@ function renderField(field, value, updateField, panelEnums) {
     pc_outcome: 'pc_outcome',
     fsc_size: 'fsc_size',
     t_normality: 't_normality',
+    b_outcome: 'b_outcome',
+    restricted_chain: 'b_restricted_chain',
     cd56_state: null, // marker state enum
     hairy_cell_markers_performed: 'performed_status',
     t_nk_markers_performed: 'performed_status',
@@ -217,13 +300,15 @@ function renderField(field, value, updateField, panelEnums) {
     blast_type: 'Blast Type',
     pct_gated_events: '% of Gated Events',
     pct_all_viable: '% of All Viable',
-    pct_region: '% of Region (leave empty if 100%)',
+    pct_region: '% of Region',
     pc_outcome: 'Plasma Cell Outcome',
     cd56_state: 'CD56 State',
     kappa_percent: 'Kappa %',
     lambda_percent: 'Lambda %',
     fsc_size: 'FSC Size',
     t_normality: 'T Cell Normality',
+    b_outcome: 'B Cell Outcome',
+    restricted_chain: 'Restricted Chain',
     cd4_percent: 'CD4 %',
     cd8_percent: 'CD8 %',
     region_pct_total: 'Region % Total',
@@ -303,7 +388,7 @@ function renderField(field, value, updateField, panelEnums) {
 
 function formatEnumLabel(value) {
   return value
-    .replace(/^(BLAST_|CYTO_TUBE_|PC_|FSC_|T_|PERFORMED_)/, '')
+    .replace(/^(BLAST_|CYTO_TUBE_|PC_|FSC_|T_|PERFORMED_|B_)/, '')
     .replace(/_/g, ' ')
     .toLowerCase()
     .replace(/\b\w/g, c => c.toUpperCase())

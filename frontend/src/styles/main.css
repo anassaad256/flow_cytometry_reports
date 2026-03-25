@@ -119,6 +119,16 @@ h1, h2, h3 {
 }
 
 /* ── Form elements ────────────────────────────── */
+.form-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 0;
+}
+.form-row > .form-group {
+  flex: 1;
+  min-width: 0;
+}
+
 .form-group {
   margin-bottom: 16px;
 }
