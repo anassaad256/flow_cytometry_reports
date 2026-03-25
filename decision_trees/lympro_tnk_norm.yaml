@@ -55,6 +55,16 @@ enums:
     - PERFORMED_NO
     - PERFORMED_YES
 
+  b_outcome:
+    - B_MONOCLONAL
+    - B_POLYCLONAL
+    - B_INSUFFICIENT
+    - B_NONE
+
+  b_restricted_chain:
+    - B_KAPPA
+    - B_LAMBDA
+
 constants:
   marker_ids_basic:
     - M_LAMBDA
@@ -158,8 +168,6 @@ constants:
     - M_CD5
     - M_CD10
     - M_CD25
-    - M_KAPPA
-    - M_LAMBDA
     - M_CD45
     - M_CD2
     - M_CD3
@@ -177,8 +185,6 @@ constants:
     - M_CD5
     - M_CD10
     - M_CD25
-    - M_KAPPA
-    - M_LAMBDA
     - M_CD45
     - M_CD2
     - M_CD3
@@ -250,8 +256,6 @@ constants:
     - M_CD5
     - M_CD10
     - M_CD25
-    - M_KAPPA
-    - M_LAMBDA
     - M_CD45
     - M_CD2
     - M_CD3
@@ -438,10 +442,12 @@ panel:
 
           inputs:
             required:
+              - b_outcome
               - pct_gated_events
               - marker_states
             optional:
               - pct_region
+              - restricted_chain
               - fsc_size
               - kappa_percent
               - lambda_percent
@@ -500,29 +506,21 @@ panel:
             - id: R_B_KAPPA_RESTRICTED
               when:
                 all:
-                  - marker_state_in: { marker: M_KAPPA, states_ref: shared_refs.expressed_states_ref }
-                  - marker_state_is: { marker: M_LAMBDA, state: STATE_NEGATIVE }
+                  - field_equals: { field: "b_outcome", value: B_MONOCLONAL }
+                  - field_equals: { field: "restricted_chain", value: B_KAPPA }
               set_tags: [TAG_B_KAPPA_RESTRICTED]
 
             - id: R_B_LAMBDA_RESTRICTED
               when:
                 all:
-                  - marker_state_in: { marker: M_LAMBDA, states_ref: shared_refs.expressed_states_ref }
-                  - marker_state_is: { marker: M_KAPPA, state: STATE_NEGATIVE }
+                  - field_equals: { field: "b_outcome", value: B_MONOCLONAL }
+                  - field_equals: { field: "restricted_chain", value: B_LAMBDA }
               set_tags: [TAG_B_LAMBDA_RESTRICTED]
 
             - id: R_B_POLYCLONAL
               when:
-                all:
-                  - marker_state_in: { marker: M_KAPPA, states_ref: shared_refs.expressed_states_ref }
-                  - marker_state_in: { marker: M_LAMBDA, states_ref: shared_refs.expressed_states_ref }
+                field_equals: { field: "b_outcome", value: B_POLYCLONAL }
               set_tags: [TAG_B_POLYCLONAL]
-
-            - id: R_B_LIGHT_CHAIN_NOT_EVALUABLE
-              when:
-                not:
-                  any_tag: [TAG_B_KAPPA_RESTRICTED, TAG_B_LAMBDA_RESTRICTED, TAG_B_POLYCLONAL]
-              set_tags: [TAG_B_LIGHT_CHAIN_NOT_EVALUABLE]
 
             - id: R_B_CLL_PATTERN
               when:
@@ -549,9 +547,10 @@ panel:
               set_tags: [TAG_B_FSC_INTERMEDIATE_TO_LARGE]
 
           normalizations:
-            - id: N_B_IGNORE_FSC_IF_NOT_RESTRICTED
+            - id: N_B_IGNORE_FSC_IF_NOT_MONOCLONAL
               when:
-                any_tag: [TAG_B_POLYCLONAL, TAG_B_LIGHT_CHAIN_NOT_EVALUABLE]
+                not:
+                  field_equals: { field: "b_outcome", value: B_MONOCLONAL }
               set_fields:
                 fsc_size: FSC_NA
 
@@ -576,25 +575,13 @@ panel:
               - id: CMT_B_NONE_DETECTED
                 priority: 200
                 when:
-                  any:
-                    - field_equals: { field: "pct_gated_events", value: 0 }
-                    - field_equals: { field: "pct_region", value: 0 }
+                  field_equals: { field: "b_outcome", value: B_NONE }
                 text: "No CD19-positive B cells detected."
 
               - id: CMT_B_INSUFFICIENT_FOR_ANALYSIS
                 priority: 150
                 when:
-                  all:
-                    - marker_states_all_na_except:
-                        except: [M_CD19, M_CD20]
-                        treat_missing_as_na: true
-                    - any:
-                        - marker_state_in: { marker: M_CD19, states_ref: shared_refs.expressed_states_ref }
-                        - marker_state_in: { marker: M_CD20, states_ref: shared_refs.expressed_states_ref }
-                    - not:
-                        any:
-                          - field_equals: { field: "pct_gated_events", value: 0 }
-                          - field_equals: { field: "pct_region", value: 0 }
+                  field_equals: { field: "b_outcome", value: B_INSUFFICIENT }
                 text: "Less than {pct_comment}% B cells identified, insufficient for further analysis."
 
               - id: CMT_B_KAPPA_RESTRICTED
@@ -621,14 +608,6 @@ panel:
                   Polyclonal B cells comprise approximately {pct_comment}% of the lymphocytes and are
                   positive for {positive_markers}{neg_clause} with a kappa to lambda ratio of about
                   {kappa_lambda_ratio_text}.
-
-              - id: CMT_B_LIGHT_CHAIN_NOT_EVALUABLE
-                priority: 70
-                when:
-                  tag_present: TAG_B_LIGHT_CHAIN_NOT_EVALUABLE
-                text: >
-                  Approximately {pct_comment}% of the lymphocytes are B cells positive for
-                  {positive_markers}{neg_clause}. Light chain expression is not evaluable for clonality assessment.
 
           main_line_item_generation:
             templates:
@@ -659,20 +638,31 @@ panel:
                   population_id: POP_B_CELLS
 
           validations:
+            - id: V_B_MONOCLONAL_REQUIRES_CHAIN
+              severity: ERROR
+              when:
+                all:
+                  - field_equals: { field: "b_outcome", value: B_MONOCLONAL }
+                  - not: { field_present: "restricted_chain" }
+              message: "Monoclonal outcome requires restricted_chain selection (kappa or lambda)."
+
             - id: V_B_POLYCLONAL_REQUIRES_LIGHTCHAIN_PCTS
               severity: ERROR
               when:
                 all:
-                  - tag_present: TAG_B_POLYCLONAL
+                  - field_equals: { field: "b_outcome", value: B_POLYCLONAL }
                   - any:
                       - not: { field_present: "kappa_percent" }
                       - not: { field_present: "lambda_percent" }
-              message: "Polyclonal branch requires kappa_percent and lambda_percent."
+              message: "Polyclonal outcome requires kappa_percent and lambda_percent."
 
             - id: V_B_NO_REPORTABLE_MARKERS
               severity: ERROR
               when:
                 all:
+                  - any:
+                      - field_equals: { field: "b_outcome", value: B_MONOCLONAL }
+                      - field_equals: { field: "b_outcome", value: B_POLYCLONAL }
                   - field_present: "marker_states"
                   - marker_states_all_equal: { state: STATE_NA }
               message: "No reportable markers selected for this B-cell population."
@@ -1058,8 +1048,10 @@ panel:
       when:
         context_population_equals: POP_B_CELLS
       ask:
+        - b_outcome
         - pct_gated_events
         - pct_region
+        - restricted_chain
         - fsc_size
 
     - step: 4
@@ -1085,7 +1077,7 @@ panel:
       when:
         all:
           - context_population_equals: POP_B_CELLS
-          - tag_present: TAG_B_POLYCLONAL
+          - field_equals: { field: "b_outcome", value: B_POLYCLONAL }
       ask:
         - kappa_percent
         - lambda_percent
@@ -1105,7 +1097,6 @@ tags_reference:
     - TAG_B_KAPPA_RESTRICTED
     - TAG_B_LAMBDA_RESTRICTED
     - TAG_B_POLYCLONAL
-    - TAG_B_LIGHT_CHAIN_NOT_EVALUABLE
     - TAG_B_CLL_PATTERN
     - TAG_B_FSC_SMALL_TO_INTERMEDIATE
     - TAG_B_FSC_INTERMEDIATE_TO_LARGE

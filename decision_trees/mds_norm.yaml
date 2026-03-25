@@ -113,7 +113,8 @@ panel:
 
       inputs:
         required: []
-        optional: []
+        optional:
+          - region_pct_total
 
       region_comment_line_generation:
         templates: []
@@ -139,7 +140,8 @@ panel:
             required:
               - pct_gated_events
               - marker_states
-            optional: []
+            optional:
+              - pct_region
 
           derived:
             - id: positive_markers
@@ -369,6 +371,7 @@ panel:
         context_region_equals: REGION_BLASTS
       ask:
         - pct_gated_events
+        - pct_region
 
     - step: 2
       when:
