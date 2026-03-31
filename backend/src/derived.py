@@ -5,8 +5,11 @@ from typing import Any
 
 
 def _fmt_number(value: float, precision: int) -> str:
-    """Format a number with given precision, stripping trailing zeros."""
-    return f"{value:.{precision}f}".rstrip('0').rstrip('.')
+    """Format a number with given precision, stripping trailing decimal zeros."""
+    result = f"{value:.{precision}f}"
+    if '.' in result:
+        result = result.rstrip('0').rstrip('.')
+    return result
 
 from .context import EvaluationContext
 from .models import EXPRESSED_STATES, MARKER_STATE_SUFFIX, MarkerState
