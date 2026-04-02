@@ -15,8 +15,12 @@ export default function PopulationForm({
   const panelEnums = panelSchema.enums || {}
   const markerCatalog = panelSchema.marker_catalog || {}
 
-  // Determine active markers for this population based on panel-level fields
-  const activeMarkers = getActiveMarkers(populationSpec, panelSchema)
+  // Determine active markers — merge population fields so t_normality etc. are visible
+  const schemaWithPopFields = React.useMemo(() => ({
+    ...panelSchema,
+    _currentFields: { ...(panelSchema._currentFields || {}), ...population.fields }
+  }), [panelSchema, population.fields])
+  const activeMarkers = getActiveMarkers(populationSpec, schemaWithPopFields)
 
   const updateField = (field, value) => {
     const newFields = { ...population.fields, [field]: value }
@@ -59,32 +63,46 @@ export default function PopulationForm({
     return resolveDefaultMarkerStates(populationSpec, population.fields)
   }, [populationSpec, population.fields])
 
-  // Track blast_type to detect changes
+  // Track blast_type to detect full-reset changes
   const blastTypeRef = React.useRef(population.fields.blast_type)
 
-  // Initialize marker states with defaults when markers first appear
+  // Reconcile marker states when active marker list changes (e.g. t_normality toggle,
+  // panel marker options change). Keeps existing states for markers still in the list,
+  // adds new markers with defaults, removes markers no longer active.
+  const activeMarkersKey = activeMarkers.join(',')
   React.useEffect(() => {
-    if (activeMarkers.length > 0 && population.marker_states.length === 0) {
-      const initial = activeMarkers.map(m => ({
-        marker_id: m,
-        state: defaults[m] || 'STATE_NA'
-      }))
-      onChange({ ...population, marker_states: initial })
-    }
-  }, [activeMarkers.length])
+    if (activeMarkers.length === 0) return
 
-  // Re-apply defaults when blast_type changes
-  React.useEffect(() => {
+    // Full reset when blast_type changes (acute leukemia)
     const currentBlastType = population.fields.blast_type
-    if (currentBlastType && currentBlastType !== blastTypeRef.current && activeMarkers.length > 0) {
+    if (currentBlastType && currentBlastType !== blastTypeRef.current) {
       blastTypeRef.current = currentBlastType
       const updated = activeMarkers.map(m => ({
         marker_id: m,
         state: defaults[m] || 'STATE_NA'
       }))
       onChange({ ...population, marker_states: updated })
+      return
     }
-  }, [population.fields.blast_type, defaults, activeMarkers])
+    blastTypeRef.current = currentBlastType
+
+    // First-time initialization or reconciliation after marker list change
+    const currentIds = new Set(population.marker_states.map(m => m.marker_id))
+    const targetIds = new Set(activeMarkers)
+    const needsReconcile = population.marker_states.length === 0 ||
+      activeMarkers.some(m => !currentIds.has(m)) ||
+      population.marker_states.some(m => !targetIds.has(m.marker_id))
+
+    if (!needsReconcile) return
+
+    const existingMap = {}
+    population.marker_states.forEach(m => { existingMap[m.marker_id] = m.state })
+    const reconciled = activeMarkers.map(m => ({
+      marker_id: m,
+      state: existingMap[m] || defaults[m] || 'STATE_NA'
+    }))
+    onChange({ ...population, marker_states: reconciled })
+  }, [activeMarkersKey, population.fields.blast_type])
 
   // Determine which fields to show based on population type
   const requiredInputs = populationSpec?.inputs?.required || []

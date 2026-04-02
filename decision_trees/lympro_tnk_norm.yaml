@@ -194,26 +194,56 @@ constants:
     - M_CD22
     - M_CD103
 
-  marker_ids_t_basic:
+  marker_ids_t_normal_basic:
     - M_CD2
-    - M_CD3
+    - M_CD19
     - M_CD5
+    - M_CD20
+    - M_CD10
+    - M_CD3
     - M_CD7
-    - M_CD4
-    - M_CD8
     - M_CD25
-    - M_CD45
 
-  marker_ids_t_plus_tnk:
+  marker_ids_t_abnormal_basic:
     - M_CD2
-    - M_CD3
+    - M_CD19
     - M_CD5
+    - M_CD20
+    - M_CD10
+    - M_CD3
     - M_CD7
-    - M_CD26
+    - M_CD25
     - M_CD4
     - M_CD8
+
+  marker_ids_t_normal_plus_tnk:
+    - M_CD2
+    - M_CD19
+    - M_CD5
+    - M_CD20
+    - M_CD10
+    - M_CD3
+    - M_CD7
     - M_CD25
-    - M_CD45
+    - M_CD26
+    - M_CD57
+    - M_CD16
+    - M_CD56
+    - M_TCR_AB
+    - M_TCR_GD
+
+  marker_ids_t_abnormal_plus_tnk:
+    - M_CD2
+    - M_CD19
+    - M_CD5
+    - M_CD20
+    - M_CD10
+    - M_CD3
+    - M_CD7
+    - M_CD25
+    - M_CD4
+    - M_CD8
+    - M_CD26
     - M_CD57
     - M_CD16
     - M_CD56
@@ -267,14 +297,16 @@ constants:
 
   marker_display_order_T:
     - M_CD2
-    - M_CD3
+    - M_CD19
     - M_CD5
+    - M_CD20
+    - M_CD10
+    - M_CD3
     - M_CD7
-    - M_CD26
+    - M_CD25
     - M_CD4
     - M_CD8
-    - M_CD25
-    - M_CD45
+    - M_CD26
     - M_CD57
     - M_CD16
     - M_CD56
@@ -672,17 +704,53 @@ panel:
 
           active_markers_generation:
             templates:
-              - id: T_MARKERS_BASIC
+              - id: T_MARKERS_NORMAL_PLUS_TNK
+                priority: 120
+                when:
+                  all:
+                    - field_equals: { field: "t_normality", value: T_NORMAL }
+                    - field_equals: { field: "t_nk_markers_performed", value: PERFORMED_YES }
+                markers_ref: marker_ids_t_normal_plus_tnk
+
+              - id: T_MARKERS_ABNORMAL_PLUS_TNK
+                priority: 115
+                when:
+                  all:
+                    - field_equals: { field: "t_normality", value: T_ABNORMAL }
+                    - field_equals: { field: "t_nk_markers_performed", value: PERFORMED_YES }
+                markers_ref: marker_ids_t_abnormal_plus_tnk
+
+              - id: T_MARKERS_NORMAL_BASIC
+                priority: 110
+                when:
+                  field_equals: { field: "t_normality", value: T_NORMAL }
+                markers_ref: marker_ids_t_normal_basic
+
+              - id: T_MARKERS_ABNORMAL_BASIC
+                priority: 105
+                when:
+                  field_equals: { field: "t_normality", value: T_ABNORMAL }
+                markers_ref: marker_ids_t_abnormal_basic
+
+              - id: T_MARKERS_DEFAULT_PLUS_TNK
                 priority: 100
                 when:
-                  field_equals: { field: "t_nk_markers_performed", value: PERFORMED_NO }
-                markers_ref: marker_ids_t_basic
+                  field_equals: { field: "t_nk_markers_performed", value: PERFORMED_YES }
+                markers_ref: marker_ids_t_abnormal_plus_tnk
 
-              - id: T_MARKERS_PLUS_TNK
+              - id: T_MARKERS_DEFAULT_BASIC
                 priority: 90
                 when:
-                  field_equals: { field: "t_nk_markers_performed", value: PERFORMED_YES }
-                markers_ref: marker_ids_t_plus_tnk
+                  default: true
+                markers_ref: marker_ids_t_abnormal_basic
+
+          default_marker_states:
+            - when:
+                default: true
+              states:
+                STATE_POSITIVE: [M_CD2, M_CD5, M_CD3, M_CD7]
+                STATE_NEGATIVE: [M_CD19, M_CD20, M_CD10]
+                STATE_SUBSET: [M_CD25]
 
           inputs:
             required:
