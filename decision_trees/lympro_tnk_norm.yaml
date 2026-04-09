@@ -452,7 +452,7 @@ panel:
             when:
               field_present: "region_pct_total"
             text: >
-              Immunophenotypic analysis detects approximately {region_pct_total}% lymphocytes in this specimen.
+              Immunophenotypic analysis detects approximately {region_pct_total}% lymphocytes characterized by dim CD45 expression and low side scatter.
 
       populations:
         - population_id: POP_B_CELLS
