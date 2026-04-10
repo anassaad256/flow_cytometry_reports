@@ -465,6 +465,16 @@ h1, h2, h3 {
   background: rgba(0, 99, 152, 0.04);
 }
 
+.add-population-btn.toggle-active {
+  background: var(--primary);
+  color: #fff;
+  border-style: solid;
+}
+
+.add-population-btn.toggle-active:hover {
+  opacity: 0.85;
+}
+
 /* ── Report output ────────────────────────────── */
 .report-section {
   margin-bottom: 20px;

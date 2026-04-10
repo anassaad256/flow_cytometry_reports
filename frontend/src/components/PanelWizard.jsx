@@ -259,6 +259,20 @@ function RegionsEditor({ schema, panelData, onChange }) {
     updateRegionData(regionId, updatedRegion)
   }
 
+  const togglePopulation = (regionId, populationId) => {
+    const region = getRegionData(regionId)
+    const exists = region.populations.some(p => p.population_id === populationId)
+    if (exists) {
+      const updatedRegion = {
+        ...region,
+        populations: region.populations.filter(p => p.population_id !== populationId),
+      }
+      updateRegionData(regionId, updatedRegion)
+    } else {
+      addPopulation(regionId, populationId)
+    }
+  }
+
   const removePopulation = (regionId, popIndex) => {
     const region = getRegionData(regionId)
     const updatedRegion = {
@@ -311,22 +325,37 @@ function RegionsEditor({ schema, panelData, onChange }) {
 
             {/* Add population buttons */}
             <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
-              {popSpecs.map(ps => (
-                <button
-                  key={ps.population_id}
-                  className="add-population-btn"
-                  style={{ width: 'auto', flex: '0 0 auto', padding: '8px 16px' }}
-                  onClick={() => addPopulation(regionId, ps.population_id)}
-                >
-                  + Add {getPopLabel(ps.population_id)}
-                </button>
-              ))}
+              {popSpecs.map(ps => {
+                if (ps.toggle_only) {
+                  const isActive = regionData.populations.some(p => p.population_id === ps.population_id)
+                  return (
+                    <button
+                      key={ps.population_id}
+                      className={`add-population-btn${isActive ? ' toggle-active' : ''}`}
+                      style={{ width: 'auto', flex: '0 0 auto', padding: '8px 16px' }}
+                      onClick={() => togglePopulation(regionId, ps.population_id)}
+                    >
+                      {getPopLabel(ps.population_id)}
+                    </button>
+                  )
+                }
+                return (
+                  <button
+                    key={ps.population_id}
+                    className="add-population-btn"
+                    style={{ width: 'auto', flex: '0 0 auto', padding: '8px 16px' }}
+                    onClick={() => addPopulation(regionId, ps.population_id)}
+                  >
+                    + Add {getPopLabel(ps.population_id)}
+                  </button>
+                )
+              })}
             </div>
 
             {/* Population forms */}
             {regionData.populations.map((pop, idx) => {
               const popSpec = popSpecs.find(ps => ps.population_id === pop.population_id)
-              if (!popSpec) return null
+              if (!popSpec || popSpec.toggle_only) return null
 
               // Merge panel-level fields into schema for active marker resolution
               const schemaWithFields = {
@@ -406,6 +435,7 @@ function getPopLabel(popId) {
     POP_B_CELLS: 'B Cells',
     POP_T_CELLS: 'T Cells',
     POP_TLGL: 'T-LGL',
+    POP_NK_CELLS: 'NK Cells',
   }
   return labels[popId] || popId
 }

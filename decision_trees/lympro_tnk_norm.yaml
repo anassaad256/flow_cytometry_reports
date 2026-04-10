@@ -1021,6 +1021,18 @@ panel:
                   - marker_states_all_equal: { state: STATE_NA }
               message: "No reportable markers selected for this T-LGL population."
 
+        - population_id: POP_NK_CELLS
+          allow_multiple: false
+          toggle_only: true
+
+          comment_line_generation:
+            templates:
+              - id: CMT_NK_CELLS
+                priority: 100
+                text: >
+                  The remaining lymphocytes are consistent with NK cells, positive for CD2 and CD7
+                  while negative for CD3 and CD5.
+
   comment_lines_generation:
     output_format: "line_list"
     order:
@@ -1028,6 +1040,7 @@ panel:
       - populations_of_type: POP_B_CELLS
       - populations_of_type: POP_T_CELLS
       - populations_of_type: POP_TLGL
+      - populations_of_type: POP_NK_CELLS
 
   main_line_items_generation:
     derived:
