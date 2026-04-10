@@ -64,6 +64,7 @@ class ReportGenerator:
                 pop_info = {
                     "population_id": pop_spec.get("population_id", ""),
                     "allow_multiple": pop_spec.get("allow_multiple", False),
+                    "toggle_only": pop_spec.get("toggle_only", False),
                     "inputs": pop_spec.get("inputs", {}),
                     "active_markers_generation": pop_spec.get("active_markers_generation", {}),
                     "default_marker_states": pop_spec.get("default_marker_states", []),
