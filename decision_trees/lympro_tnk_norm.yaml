@@ -161,36 +161,24 @@ constants:
   marker_ids_b_basic:
     - M_CD19
     - M_CD20
+    - M_CD2
+    - M_CD5
+    - M_CD10
     - M_FMC7
     - M_CD23
     - M_CD11C
     - M_CD38
-    - M_CD5
-    - M_CD10
-    - M_CD25
-    - M_CD45
-    - M_CD2
-    - M_CD3
-    - M_CD4
-    - M_CD7
-    - M_CD8
 
   marker_ids_b_plus_hairy:
     - M_CD19
     - M_CD20
+    - M_CD2
+    - M_CD5
+    - M_CD10
     - M_FMC7
     - M_CD23
     - M_CD11C
     - M_CD38
-    - M_CD5
-    - M_CD10
-    - M_CD25
-    - M_CD45
-    - M_CD2
-    - M_CD3
-    - M_CD4
-    - M_CD7
-    - M_CD8
     - M_CD22
     - M_CD103
 
@@ -279,19 +267,13 @@ constants:
   marker_display_order_B:
     - M_CD19
     - M_CD20
+    - M_CD2
+    - M_CD5
+    - M_CD10
     - M_FMC7
     - M_CD23
     - M_CD11C
     - M_CD38
-    - M_CD5
-    - M_CD10
-    - M_CD25
-    - M_CD45
-    - M_CD2
-    - M_CD3
-    - M_CD4
-    - M_CD7
-    - M_CD8
     - M_CD22
     - M_CD103
 
@@ -471,6 +453,14 @@ panel:
                 when:
                   field_equals: { field: "hairy_cell_markers_performed", value: PERFORMED_YES }
                 markers_ref: marker_ids_b_plus_hairy
+
+          default_marker_states:
+            - when:
+                default: true
+              states:
+                STATE_POSITIVE: [M_CD19, M_CD20, M_FMC7, M_CD38]
+                STATE_NEGATIVE: [M_CD2, M_CD5, M_CD10]
+                STATE_SUBSET: [M_CD23]
 
           inputs:
             required:
