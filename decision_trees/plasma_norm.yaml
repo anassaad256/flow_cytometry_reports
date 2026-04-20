@@ -163,8 +163,7 @@ panel:
                 when:
                   field_equals: { field: "pc_outcome", value: PC_INSUFFICIENT }
                 text: >
-                  These plasma cells are insufficient for further analysis using CD19, CD56,
-                  cytoplasmic kappa light chain, and cytoplasmic lambda light chain.
+                  These plasma cells are below the threshold for optimal light chain analysis.
 
               - id: CMT_PC_POLYCLONAL
                 priority: 90
@@ -228,7 +227,7 @@ panel:
                 when:
                   field_equals: { field: "pc_outcome", value: PC_INSUFFICIENT }
                 item:
-                  text: "Immunophenotypic analysis detects {pct_main}% plasma cells, insufficient for further analysis."
+                  text: "Immunophenotypic analysis detects {pct_main}% plasma cells, below the threshold for optimal light chain analysis."
                   finding_priority: 500
                   finding_class: "PLASMA_INSUFFICIENT"
                   panel_id: PANEL_PLASMA_CELL_MYELOMA
