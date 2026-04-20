@@ -100,18 +100,21 @@ class MainTreeRunner:
                 item.selection_order = idx
                 all_main_items.append(item)
 
-        # Suppress PANEL_NEGATIVE items only when clinically significant
-        # positive findings exist (not just any non-negative finding)
+        # Suppress PANEL_NEGATIVE items only when the SAME panel has a
+        # clinically significant positive finding — so each panel's benign
+        # fallback still shows when another panel has positive findings.
         positive_classes = set(
             self.spec.get("constants", {}).get("positive_finding_classes", [])
         )
-        has_positive_findings = any(
-            item.finding_class in positive_classes for item in all_main_items
-        )
-        if has_positive_findings:
+        panels_with_positive = {
+            item.panel_id for item in all_main_items
+            if item.finding_class in positive_classes
+        }
+        if panels_with_positive:
             all_main_items = [
                 item for item in all_main_items
                 if item.finding_class != "PANEL_NEGATIVE"
+                or item.panel_id not in panels_with_positive
             ]
 
         ordered_texts = sort_main_line_items(all_main_items)
